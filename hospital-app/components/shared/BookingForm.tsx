@@ -37,25 +37,16 @@ import { toast } from 'sonner'
 import { createAppointment } from '@/app/actions/appointments'
 
 const formSchema = z.object({
-  doctor_id: z.string({
-    required_error: "Please select a doctor.",
-  }),
-  appointment_date: z.date({
-    required_error: "A date of appointment is required.",
-  }),
-  appointment_time: z.string({
-    required_error: "Please select a time.",
-  }),
+  doctor_id: z.string().min(1, "Please select a doctor."),
+  appointment_date: z.date(),
+  appointment_time: z.string().min(1, "Please select a time."),
   reason: z.string().optional(),
 })
 
 type Doctor = {
   id: string
   specialization: string
-  profiles: {
-    first_name: string
-    last_name: string
-  }
+  profiles: any
 }
 
 export function BookingForm({ doctors, defaultDoctorId }: { doctors: Doctor[], defaultDoctorId?: string }) {
@@ -132,23 +123,23 @@ export function BookingForm({ doctors, defaultDoctorId }: { doctors: Doctor[], d
               <FormItem className="flex flex-col">
                 <FormLabel>Date</FormLabel>
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
+                  <PopoverTrigger
+                    render={
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "pl-3 text-left font-normal",
+                          "pl-3 text-left font-normal w-full",
                           !field.value && "text-muted-foreground"
                         )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
+                      />
+                    }
+                  >
+                    {field.value ? (
+                      format(field.value, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
@@ -158,7 +149,6 @@ export function BookingForm({ doctors, defaultDoctorId }: { doctors: Doctor[], d
                       disabled={(date) =>
                         date < new Date() || date < new Date("1900-01-01")
                       }
-                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
