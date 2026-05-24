@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { login } from '@/app/actions/auth'
+import Link from 'next/link'
 
 export default function LoginPage() {
   return (
@@ -34,9 +35,9 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor={`${role}-password`}>Password</Label>
-                    <a href="#" className="text-sm font-medium text-primary hover:underline">
+                    <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
                       Forgot password?
-                    </a>
+                    </Link>
                   </div>
                   <Input id={`${role}-password`} name="password" type="password" required />
                 </div>
