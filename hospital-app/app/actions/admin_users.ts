@@ -4,6 +4,20 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
+import { z } from 'zod'
+
+const provisionSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters for security'),
+  first_name: z.string().min(1, 'First name is required').max(50),
+  last_name: z.string().min(1, 'Last name is required').max(50),
+  role: z.enum(['doctor', 'staff']),
+  specialization: z.string().max(100).optional(),
+}).refine(data => {
+  if (data.role === 'doctor' && !data.specialization) return false
+  return true
+}, { message: 'Specialization is required for doctors', path: ['specialization'] })
+
 export async function provisionAccount(formData: FormData) {
   const supabase = await createClient()
 
@@ -14,21 +28,13 @@ export async function provisionAccount(formData: FormData) {
   const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single()
   if (userData?.role !== 'admin') return { error: 'Unauthorized: Admins only' }
 
-  // 2. Extract form data
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-  const firstName = formData.get('first_name') as string
-  const lastName = formData.get('last_name') as string
-  const role = formData.get('role') as string
-  const specialization = formData.get('specialization') as string
-
-  if (!email || !password || !firstName || !lastName || !role) {
-    return { error: 'All base fields are required.' }
+  // 2. Strict Zod Validation
+  const parsed = provisionSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message }
   }
-
-  if (role === 'doctor' && !specialization) {
-    return { error: 'Specialization is required for doctors.' }
-  }
+  
+  const { email, password, first_name: firstName, last_name: lastName, role, specialization } = parsed.data
 
   try {
     // 3. Use Admin Client to create user (bypasses RLS and prevents logout)

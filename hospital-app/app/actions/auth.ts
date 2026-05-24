@@ -4,14 +4,30 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+import { z } from 'zod'
+
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+  role: z.enum(['admin', 'doctor', 'staff', 'patient'])
+})
+
+const signupSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  firstName: z.string().min(1, 'First name is required').max(50),
+  lastName: z.string().min(1, 'Last name is required').max(50)
+})
+
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
-  // type-casting here for convenience
-  // in practice, use a validation library like Zod
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-  const role = formData.get('role') as string
+  // Strict Zod Validation
+  const parsed = loginSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    redirect(`/login?message=Invalid input data`)
+  }
+  const { email, password, role } = parsed.data
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -49,10 +65,12 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-  const firstName = formData.get('firstName') as string
-  const lastName = formData.get('lastName') as string
+  // Strict Zod Validation
+  const parsed = signupSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    redirect(`/login?message=Invalid input data`)
+  }
+  const { email, password, firstName, lastName } = parsed.data
 
   const { data, error } = await supabase.auth.signUp({
     email,
