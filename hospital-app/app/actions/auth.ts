@@ -13,21 +13,36 @@ export async function login(formData: FormData) {
   const password = formData.get('password') as string
   const role = formData.get('role') as string
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
-  if (error) {
+  if (error || !data.user) {
     redirect(`/login?message=Could not authenticate user`)
+  }
+
+  // Fetch their actual role from the database
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', data.user.id)
+    .single()
+
+  const actualRole = userData?.role || 'patient'
+
+  // If they tried to log in using the wrong tab, reject them.
+  if (actualRole !== role) {
+    await supabase.auth.signOut()
+    redirect(`/login?message=Unauthorized. You do not have ${role} privileges.`)
   }
 
   revalidatePath('/', 'layout')
   
-  // Redirect based on role
-  if (role === 'admin') redirect('/admin')
-  if (role === 'doctor') redirect('/doctor')
-  if (role === 'staff') redirect('/staff')
+  // Redirect based on actual role
+  if (actualRole === 'admin') redirect('/admin')
+  if (actualRole === 'doctor') redirect('/doctor')
+  if (actualRole === 'staff') redirect('/staff')
   redirect('/patient')
 }
 
