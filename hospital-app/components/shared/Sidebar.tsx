@@ -12,18 +12,14 @@ const getLinks = (role: string) => {
   ]
   if (role === 'patient') return [
     { name: 'Dashboard', href: '/patient', icon: LayoutDashboard },
-    { name: 'Appointments', href: '/patient/appointments', icon: Calendar },
+    { name: 'Book Appointment', href: '/book', icon: Calendar },
     { name: 'Medical Records', href: '/patient/records', icon: FileText },
   ]
   if (role === 'doctor') return [
     { name: 'Dashboard', href: '/doctor', icon: LayoutDashboard },
-    { name: 'Appointments', href: '/doctor/appointments', icon: Calendar },
-    { name: 'My Patients', href: '/doctor/patients', icon: Users },
   ]
   if (role === 'staff') return [
     { name: 'Dashboard', href: '/staff', icon: LayoutDashboard },
-    { name: 'Pharmacy Inventory', href: '/staff/inventory', icon: ShieldPlus },
-    { name: 'Billing', href: '/staff/billing', icon: FileText },
   ]
   return []
 }
