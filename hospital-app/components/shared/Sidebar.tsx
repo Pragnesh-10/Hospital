@@ -7,7 +7,7 @@ const getLinks = (role: string) => {
   if (role === 'admin') return [
     { name: 'Overview', href: '/admin', icon: LayoutDashboard },
     { name: 'Manage Doctors', href: '/admin/doctors', icon: Users },
-    { name: 'Uploads & Assets', href: '/admin/uploads', icon: Upload },
+    { name: 'Uploads & Assets', href: '/admin/upload', icon: Upload },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
   if (role === 'patient') return [
