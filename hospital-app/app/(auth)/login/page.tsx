@@ -1,0 +1,58 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+
+export default function LoginPage() {
+  return (
+    <Card className="w-full shadow-lg border-0">
+      <CardHeader className="space-y-1 text-center">
+        <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+        <CardDescription>
+          Login to your account to manage your details
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="patient" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="patient">Patient</TabsTrigger>
+            <TabsTrigger value="doctor">Doctor</TabsTrigger>
+            <TabsTrigger value="staff">Staff</TabsTrigger>
+            <TabsTrigger value="admin">Admin</TabsTrigger>
+          </TabsList>
+          
+          {['patient', 'doctor', 'staff', 'admin'].map((role) => (
+            <TabsContent key={role} value={role} className="space-y-4 mt-0">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`${role}-email`}>Email</Label>
+                  <Input id={`${role}-email`} type="email" placeholder="m@example.com" required />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={`${role}-password`}>Password</Label>
+                    <a href="#" className="text-sm font-medium text-primary hover:underline">
+                      Forgot password?
+                    </a>
+                  </div>
+                  <Input id={`${role}-password`} type="password" required />
+                </div>
+                <Button className="w-full" type="submit">
+                  Login as {role.charAt(0).toUpperCase() + role.slice(1)}
+                </Button>
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+        
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{' '}
+          <a href="/register" className="font-medium text-primary hover:underline">
+            Register as a Patient
+          </a>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

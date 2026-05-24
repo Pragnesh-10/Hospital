@@ -1,0 +1,81 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Calendar, Users, ClipboardList } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { format } from 'date-fns'
+
+export default async function DoctorDashboardPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  const { data: appointments } = await supabase
+    .from('appointments')
+    .select('*, profiles!patient_id(first_name, last_name)')
+    .eq('doctor_id', user.id)
+    .order('appointment_date', { ascending: true })
+
+  const today = new Date().toISOString().split('T')[0]
+  const todayAppointments = appointments?.filter(a => a.appointment_date === today) || []
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Appointments Today</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{todayAppointments.length}</div>
+            <p className="text-xs text-muted-foreground">For {format(new Date(), "MMMM d, yyyy")}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Total Appointments</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{appointments?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">Historical and upcoming</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Pending Reports to Review</CardTitle>
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">Require your attention</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Today's Schedule</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {todayAppointments.length > 0 ? todayAppointments.map((appt) => (
+              <div key={appt.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                <div>
+                  <p className="font-medium">{appt.profiles?.first_name} {appt.profiles?.last_name}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{appt.status} - {appt.reason || 'No reason provided'}</p>
+                </div>
+                <div className="text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
+                  {appt.appointment_time}
+                </div>
+              </div>
+            )) : (
+              <p className="text-muted-foreground">No appointments scheduled for today.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
