@@ -5,38 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
-// Mock data for UI presentation
-const MOCK_DOCTORS = [
-  {
-    id: '1',
-    profiles: { first_name: 'Sarah', last_name: 'Jenkins', avatar_url: 'https://i.pravatar.cc/150?u=1' },
-    specialization: 'Cardiology',
-    experience_years: 15,
-    availability: 'Mon, Wed, Fri',
-  },
-  {
-    id: '2',
-    profiles: { first_name: 'Michael', last_name: 'Chen', avatar_url: 'https://i.pravatar.cc/150?u=2' },
-    specialization: 'Neurology',
-    experience_years: 12,
-    availability: 'Tue, Thu, Sat',
-  },
-  {
-    id: '3',
-    profiles: { first_name: 'Emily', last_name: 'Rodriguez', avatar_url: 'https://i.pravatar.cc/150?u=3' },
-    specialization: 'Pediatrics',
-    experience_years: 8,
-    availability: 'Mon-Fri',
-  },
-  {
-    id: '4',
-    profiles: { first_name: 'James', last_name: 'Wilson', avatar_url: 'https://i.pravatar.cc/150?u=4' },
-    specialization: 'Orthopedics',
-    experience_years: 20,
-    availability: 'Mon, Thu',
-  }
-]
-
 export default async function DoctorsPage() {
   const supabase = await createClient()
 
@@ -46,9 +14,7 @@ export default async function DoctorsPage() {
     .select('*, profiles(*)')
     .eq('is_active', true)
 
-  const doctors = !error && dbDoctors && dbDoctors.length > 0
-    ? dbDoctors
-    : MOCK_DOCTORS
+  const doctors = (!error && dbDoctors) ? dbDoctors : []
 
   return (
     <div className="container py-20 px-4 md:px-6">
@@ -60,6 +26,12 @@ export default async function DoctorsPage() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {doctors.length === 0 && (
+          <div className="col-span-full text-center py-12 text-muted-foreground">
+            No doctors are currently available. Please check back later.
+          </div>
+        )}
+        
         {doctors.map((doctor: any) => {
           const fullName = doctor.profiles ? `Dr. ${doctor.profiles.first_name} ${doctor.profiles.last_name}` : 'Unknown Doctor';
           const avatarUrl = doctor.profiles?.avatar_url || '';
