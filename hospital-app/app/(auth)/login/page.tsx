@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { login } from '@/app/actions/auth'
 
 export default function LoginPage() {
   return (
@@ -24,10 +25,11 @@ export default function LoginPage() {
           
           {['patient', 'doctor', 'staff', 'admin'].map((role) => (
             <TabsContent key={role} value={role} className="space-y-4 mt-0">
-              <div className="space-y-4">
+              <form action={login} className="space-y-4">
+                <input type="hidden" name="role" value={role} />
                 <div className="space-y-2">
                   <Label htmlFor={`${role}-email`}>Email</Label>
-                  <Input id={`${role}-email`} type="email" placeholder="m@example.com" required />
+                  <Input id={`${role}-email`} name="email" type="email" placeholder="m@example.com" required />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -36,12 +38,12 @@ export default function LoginPage() {
                       Forgot password?
                     </a>
                   </div>
-                  <Input id={`${role}-password`} type="password" required />
+                  <Input id={`${role}-password`} name="password" type="password" required />
                 </div>
                 <Button className="w-full" type="submit">
                   Login as {role.charAt(0).toUpperCase() + role.slice(1)}
                 </Button>
-              </div>
+              </form>
             </TabsContent>
           ))}
         </Tabs>
