@@ -42,10 +42,10 @@ export async function createAppointment(formData: FormData) {
 
   const { doctor_id, appointment_date, appointment_time, reason, guest_name, guest_email, guest_phone } = validatedFields.data
 
-  // Basic check: if not logged in, guest name and email are required
-  if (!user && (!guest_name || !guest_email)) {
+  // Basic check: if not logged in, guest name and phone are required
+  if (!user && (!guest_name || !guest_phone)) {
     return {
-      error: "Guest name and email are required for booking.",
+      error: "Guest name and phone number are required for booking.",
     }
   }
 

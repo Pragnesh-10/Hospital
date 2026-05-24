@@ -3,6 +3,7 @@ import { Calendar, Users, ClipboardList } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { format } from 'date-fns'
+import { DoctorSchedule } from './DoctorSchedule'
 
 export default async function DoctorDashboardPage() {
   const supabase = await createClient()
@@ -59,21 +60,7 @@ export default async function DoctorDashboardPage() {
           <CardTitle>Today's Schedule</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {todayAppointments.length > 0 ? todayAppointments.map((appt) => (
-              <div key={appt.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                <div>
-                  <p className="font-medium">{appt.profiles?.first_name} {appt.profiles?.last_name}</p>
-                  <p className="text-sm text-muted-foreground capitalize">{appt.status} - {appt.reason || 'No reason provided'}</p>
-                </div>
-                <div className="text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
-                  {appt.appointment_time}
-                </div>
-              </div>
-            )) : (
-              <p className="text-muted-foreground">No appointments scheduled for today.</p>
-            )}
-          </div>
+          <DoctorSchedule appointments={todayAppointments} allAppointments={appointments || []} />
         </CardContent>
       </Card>
     </div>

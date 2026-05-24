@@ -43,8 +43,8 @@ const formSchema = z.object({
   appointment_time: z.string().min(1, "Please select a time."),
   reason: z.string().optional(),
   guest_name: z.string().optional(),
-  guest_email: z.string().optional(),
   guest_phone: z.string().optional(),
+  guest_email: z.string().email("Invalid email").optional().or(z.literal("")),
 })
 
 type Doctor = {
@@ -65,8 +65,8 @@ export function BookingForm({ doctors, defaultDoctorId, isGuest = false }: { doc
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (isGuest && (!values.guest_name || !values.guest_email)) {
-      toast.error("Please provide your name and email to book as a guest.")
+    if (isGuest && (!values.guest_name || !values.guest_phone)) {
+      toast.error("Please provide your name and phone number to book as a guest.")
       return
     }
 
@@ -218,26 +218,26 @@ export function BookingForm({ doctors, defaultDoctorId, isGuest = false }: { doc
             
             <FormField
               control={form.control}
-              name="guest_email"
+              name="guest_phone"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email *</FormLabel>
+                <FormItem className="col-span-full sm:col-span-1">
+                  <FormLabel>Phone Number *</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="john@example.com" {...field} />
+                    <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
-              name="guest_phone"
+              name="guest_email"
               render={({ field }) => (
                 <FormItem className="col-span-full sm:col-span-1">
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Email (Optional)</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
+                    <Input type="email" placeholder="john@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
