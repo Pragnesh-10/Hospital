@@ -1,0 +1,108 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+
+export async function uploadFacilityImage(formData: FormData) {
+  const supabase = await createClient()
+
+  // 1. Verify admin
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { data: userRole } = await supabase.from('users').select('role').eq('id', user.id).single()
+  if (userRole?.role !== 'admin') return { error: "Not authorized. Admin only." }
+
+  // 2. Get file and facility ID
+  const file = formData.get('image') as File
+  const facilityId = formData.get('facility_id') as string
+
+  if (!file || !facilityId) {
+    return { error: "File and Facility ID are required" }
+  }
+
+  try {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${facilityId}-${Math.random()}.${fileExt}`
+    const filePath = `${fileName}`
+
+    // 3. Upload to Supabase Storage (bucket: hospital-images)
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('hospital-images')
+      .upload(filePath, file)
+
+    if (uploadError) {
+      console.error("Storage Error:", uploadError)
+      return { error: uploadError.message }
+    }
+
+    // 4. Get Public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('hospital-images')
+      .getPublicUrl(filePath)
+
+    // 5. Update Facilities table
+    const { error: dbError } = await supabase
+      .from('facilities')
+      .update({ image_url: publicUrl })
+      .eq('id', facilityId)
+
+    if (dbError) {
+      return { error: "Failed to update facility record" }
+    }
+
+    revalidatePath('/admin', 'layout')
+    revalidatePath('/facilities')
+    return { success: true, url: publicUrl }
+
+  } catch (err: any) {
+    return { error: err.message || "An unexpected error occurred" }
+  }
+}
+
+export async function uploadDoctorImage(formData: FormData) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { data: userRole } = await supabase.from('users').select('role').eq('id', user.id).single()
+  if (userRole?.role !== 'admin') return { error: "Not authorized. Admin only." }
+
+  const file = formData.get('image') as File
+  const doctorId = formData.get('doctor_id') as string
+
+  if (!file || !doctorId) {
+    return { error: "File and Doctor ID are required" }
+  }
+
+  try {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `doctor-${doctorId}-${Math.random()}.${fileExt}`
+    const filePath = `${fileName}`
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('hospital-images')
+      .upload(filePath, file)
+
+    if (uploadError) return { error: uploadError.message }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('hospital-images')
+      .getPublicUrl(filePath)
+
+    const { error: dbError } = await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', doctorId)
+
+    if (dbError) return { error: "Failed to update profile record" }
+
+    revalidatePath('/admin', 'layout')
+    revalidatePath('/doctors')
+    return { success: true, url: publicUrl }
+
+  } catch (err: any) {
+    return { error: err.message || "An unexpected error occurred" }
+  }
+}

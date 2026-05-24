@@ -88,7 +88,7 @@ export default async function PatientDashboardPage() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 flex flex-col">
-            <Link href="/patient/book" className={buttonVariants()}>
+            <Link href="/book" className={buttonVariants()}>
               Book New Appointment
             </Link>
             <Link href="/patient/records" className={buttonVariants({ variant: "outline" })}>

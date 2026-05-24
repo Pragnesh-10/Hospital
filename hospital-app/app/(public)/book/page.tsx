@@ -21,6 +21,8 @@ export default async function BookAppointmentPage({
 
   const doctors = (!error && dbDoctors) ? dbDoctors : []
 
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="space-y-2">
@@ -36,7 +38,7 @@ export default async function BookAppointmentPage({
           <CardDescription>Select your preferred doctor, date, and time.</CardDescription>
         </CardHeader>
         <CardContent>
-          <BookingForm doctors={doctors} defaultDoctorId={doctorId} />
+          <BookingForm doctors={doctors} defaultDoctorId={doctorId} isGuest={!user} />
         </CardContent>
       </Card>
     </div>

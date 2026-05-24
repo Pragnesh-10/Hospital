@@ -31,7 +31,7 @@ export function Navbar() {
           <Link href="/login">
             <Button variant="outline">Log in</Button>
           </Link>
-          <Link href="/patient/book">
+          <Link href="/book">
             <Button>Book Appointment</Button>
           </Link>
         </div>

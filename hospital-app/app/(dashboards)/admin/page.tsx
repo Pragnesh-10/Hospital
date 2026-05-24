@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Activity, DollarSign, Calendar } from 'lucide-react'
+import Link from 'next/link'
+import { buttonVariants } from '@/components/ui/button'
 
 export default function AdminDashboardPage() {
   return (
@@ -64,6 +66,20 @@ export default function AdminDashboardPage() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 flex flex-col">
+            <Link href="/admin/upload" className={buttonVariants()}>
+              Upload Doctor/Facility Images
+            </Link>
+            <Link href="/admin/settings" className={buttonVariants({ variant: "outline" })}>
+              System Settings
+            </Link>
           </CardContent>
         </Card>
 

@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { createAppointment } from '@/app/actions/appointments'
 
@@ -41,6 +42,9 @@ const formSchema = z.object({
   appointment_date: z.date(),
   appointment_time: z.string().min(1, "Please select a time."),
   reason: z.string().optional(),
+  guest_name: z.string().optional(),
+  guest_email: z.string().optional(),
+  guest_phone: z.string().optional(),
 })
 
 type Doctor = {
@@ -49,7 +53,7 @@ type Doctor = {
   profiles: any
 }
 
-export function BookingForm({ doctors, defaultDoctorId }: { doctors: Doctor[], defaultDoctorId?: string }) {
+export function BookingForm({ doctors, defaultDoctorId, isGuest = false }: { doctors: Doctor[], defaultDoctorId?: string, isGuest?: boolean }) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -61,6 +65,11 @@ export function BookingForm({ doctors, defaultDoctorId }: { doctors: Doctor[], d
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (isGuest && (!values.guest_name || !values.guest_email)) {
+      toast.error("Please provide your name and email to book as a guest.")
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const formData = new FormData()
@@ -68,6 +77,9 @@ export function BookingForm({ doctors, defaultDoctorId }: { doctors: Doctor[], d
       formData.append('appointment_date', format(values.appointment_date, 'yyyy-MM-dd'))
       formData.append('appointment_time', values.appointment_time)
       if (values.reason) formData.append('reason', values.reason)
+      if (isGuest && values.guest_name) formData.append('guest_name', values.guest_name)
+      if (isGuest && values.guest_email) formData.append('guest_email', values.guest_email)
+      if (isGuest && values.guest_phone) formData.append('guest_phone', values.guest_phone)
 
       const result = await createAppointment(formData)
       
@@ -182,6 +194,57 @@ export function BookingForm({ doctors, defaultDoctorId }: { doctors: Doctor[], d
             )}
           />
         </div>
+
+        {isGuest && (
+          <div className="grid sm:grid-cols-2 gap-4 border p-4 rounded-lg bg-muted/20">
+            <div className="col-span-full">
+              <h3 className="font-medium text-sm">Guest Information</h3>
+              <p className="text-xs text-muted-foreground">Please provide your details since you are not logged in.</p>
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="guest_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="guest_email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email *</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="john@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="guest_phone"
+              render={({ field }) => (
+                <FormItem className="col-span-full sm:col-span-1">
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
         <FormField
           control={form.control}

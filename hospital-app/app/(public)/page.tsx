@@ -20,7 +20,7 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/patient/book" className={buttonVariants({ size: "lg", className: "w-full sm:w-auto" })}>
+                <Link href="/book" className={buttonVariants({ size: "lg", className: "w-full sm:w-auto" })}>
                   Book Appointment <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
                 <Link href="/doctors" className={buttonVariants({ variant: "outline", size: "lg", className: "w-full sm:w-auto" })}>

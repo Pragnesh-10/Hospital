@@ -86,7 +86,7 @@ export default async function DoctorsPage() {
                     <p>Availability: <span className="font-medium text-foreground">{doctor.availability || 'Contact Hospital'}</span></p>
                   </div>
 
-                  <Link href={`/patient/book?doctor=${doctor.id}`} className={buttonVariants({ className: "w-full" })}>
+                  <Link href={`/book?doctor=${doctor.id}`} className={buttonVariants({ className: "w-full" })}>
                     Book Appointment
                   </Link>
                 </div>
