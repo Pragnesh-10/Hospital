@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { format } from 'date-fns'
 import { DoctorSchedule } from './DoctorSchedule'
+import { DoctorSelfToggle } from './DoctorSelfToggle'
+import { LeaveManager } from './LeaveManager'
 
 export default async function DoctorDashboardPage() {
   const supabase = await createClient()
@@ -21,6 +23,12 @@ export default async function DoctorDashboardPage() {
     .from('profiles')
     .select('id, first_name, last_name')
 
+  const { data: doctorLeaves } = await supabase
+    .from('doctor_leaves')
+    .select('*')
+    .eq('doctor_id', user.id)
+    .order('start_date', { ascending: true })
+
   const appointments = (dbAppointments || []).map(appt => {
     const profile = (dbProfiles || []).find(p => p.id === appt.patient_id)
     return {
@@ -32,8 +40,19 @@ export default async function DoctorDashboardPage() {
   const today = new Date().toISOString().split('T')[0]
   const todayAppointments = appointments.filter(a => a.appointment_date === today)
 
+  const { data: doctorData } = await supabase
+    .from('doctors')
+    .select('is_active')
+    .eq('id', user.id)
+    .single()
+
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <DoctorSelfToggle initialStatus={doctorData?.is_active ?? false} />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -67,14 +86,16 @@ export default async function DoctorDashboardPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Today's Schedule</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DoctorSchedule appointments={todayAppointments} allAppointments={appointments || []} />
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Today's Schedule</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DoctorSchedule appointments={todayAppointments} allAppointments={appointments || []} />
+          </CardContent>
+        </Card>
+
+        <LeaveManager initialLeaves={doctorLeaves || []} />
     </div>
   )
 }

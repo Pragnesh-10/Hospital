@@ -53,7 +53,17 @@ type Doctor = {
   profiles: any
 }
 
-export function BookingForm({ doctors, defaultDoctorId, isGuest = false }: { doctors: Doctor[], defaultDoctorId?: string, isGuest?: boolean }) {
+export function BookingForm({ 
+  doctors, 
+  defaultDoctorId, 
+  isGuest = false,
+  leaves = []
+}: { 
+  doctors: Doctor[], 
+  defaultDoctorId?: string, 
+  isGuest?: boolean,
+  leaves?: any[]
+}) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -63,6 +73,36 @@ export function BookingForm({ doctors, defaultDoctorId, isGuest = false }: { doc
       doctor_id: defaultDoctorId || "",
     },
   })
+
+  // Get currently selected doctor to filter their specific leaves
+  const selectedDoctorId = form.watch("doctor_id")
+
+  // Function to check if a date is within any leave period for the selected doctor
+  const isDateDisabled = (date: Date) => {
+    // Basic rules: past dates are disabled
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (date < today) return true
+
+    if (!selectedDoctorId) return false
+
+    // Filter leaves for the selected doctor
+    const doctorLeaves = leaves.filter(l => l.doctor_id === selectedDoctorId)
+    
+    // Check if the given date falls in any leave range
+    for (const leave of doctorLeaves) {
+      const start = new Date(leave.start_date)
+      const end = new Date(leave.end_date)
+      start.setHours(0, 0, 0, 0)
+      end.setHours(23, 59, 59, 999)
+
+      if (date >= start && date <= end) {
+        return true
+      }
+    }
+
+    return false
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (isGuest && (!values.guest_name || !values.guest_phone)) {
@@ -108,7 +148,11 @@ export function BookingForm({ doctors, defaultDoctorId, isGuest = false }: { doc
           render={({ field }) => (
             <FormItem>
               <FormLabel>Doctor</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={(val) => {
+                field.onChange(val)
+                // Clear selected date if they change the doctor, since the new doctor might be on leave that day
+                form.setValue("appointment_date", undefined as any)
+              }} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a doctor" />
@@ -141,15 +185,17 @@ export function BookingForm({ doctors, defaultDoctorId, isGuest = false }: { doc
                         variant={"outline"}
                         className={cn(
                           "pl-3 text-left font-normal w-full",
-                          !field.value && "text-muted-foreground"
+                          !field.value && "text-muted-foreground",
+                          !selectedDoctorId && "opacity-50 cursor-not-allowed"
                         )}
+                        disabled={!selectedDoctorId}
                       />
                     }
                   >
                     {field.value ? (
                       format(field.value, "PPP")
                     ) : (
-                      <span>Pick a date</span>
+                      <span>{selectedDoctorId ? "Pick a date" : "Select a doctor first"}</span>
                     )}
                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                   </PopoverTrigger>
@@ -158,9 +204,7 @@ export function BookingForm({ doctors, defaultDoctorId, isGuest = false }: { doc
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) =>
-                        date < new Date() || date < new Date("1900-01-01")
-                      }
+                      disabled={isDateDisabled}
                     />
                   </PopoverContent>
                 </Popover>

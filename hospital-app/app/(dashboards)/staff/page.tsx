@@ -24,6 +24,12 @@ export default async function StaffDashboardPage() {
     .order('created_at', { ascending: false })
     .limit(5)
 
+  // Fetch active doctors count
+  const { count: activeDoctorsCount } = await supabase
+    .from('doctors')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_active', true)
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -31,7 +37,9 @@ export default async function StaffDashboardPage() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search patient by ID or Name..." className="pl-8" />
         </div>
-        <Button>Register Walk-in Patient</Button>
+        <Link href="/book">
+          <Button>Register Walk-in Patient</Button>
+        </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -51,8 +59,8 @@ export default async function StaffDashboardPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Live</div>
-            <p className="text-xs text-muted-foreground">Check directory for availability</p>
+            <div className="text-2xl font-bold">{activeDoctorsCount || 0}</div>
+            <p className="text-xs text-muted-foreground">Currently active in system</p>
           </CardContent>
         </Card>
         <Card>

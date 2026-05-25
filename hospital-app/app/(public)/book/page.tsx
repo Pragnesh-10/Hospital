@@ -23,6 +23,11 @@ export default async function BookAppointmentPage({
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  const { data: dbLeaves } = await supabase
+    .from('doctor_leaves')
+    .select('*')
+    .gte('end_date', new Date().toISOString().split('T')[0]) // Only fetch current/future leaves
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="space-y-2">
@@ -38,7 +43,12 @@ export default async function BookAppointmentPage({
           <CardDescription>Select your preferred doctor, date, and time.</CardDescription>
         </CardHeader>
         <CardContent>
-          <BookingForm doctors={doctors} defaultDoctorId={doctorId} isGuest={!user} />
+          <BookingForm 
+            doctors={doctors} 
+            defaultDoctorId={doctorId} 
+            isGuest={!user} 
+            leaves={dbLeaves || []} 
+          />
         </CardContent>
       </Card>
     </div>
