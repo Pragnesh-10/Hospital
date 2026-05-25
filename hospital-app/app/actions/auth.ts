@@ -133,7 +133,7 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/patient')
+  redirect('/patient?message=Account created successfully!')
 }
 
 export async function signout() {
