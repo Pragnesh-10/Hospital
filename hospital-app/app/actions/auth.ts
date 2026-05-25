@@ -34,7 +34,10 @@ export async function login(formData: FormData) {
     password,
   })
 
-  if (error || !data.user) {
+  if (error) {
+    redirect(`/login?message=${encodeURIComponent(error.message)}`)
+  }
+  if (!data.user) {
     redirect(`/login?message=Could not authenticate user`)
   }
 

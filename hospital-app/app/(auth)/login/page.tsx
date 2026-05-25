@@ -6,7 +6,12 @@ import { Button } from '@/components/ui/button'
 import { login } from '@/app/actions/auth'
 import Link from 'next/link'
 
-export default function LoginPage() {
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+
+export default async function LoginPage(props: { searchParams: SearchParams }) {
+  const searchParams = await props.searchParams
+  const message = searchParams?.message as string | undefined
+
   return (
     <Card className="w-full shadow-lg border-0">
       <CardHeader className="space-y-1 text-center">
@@ -16,6 +21,11 @@ export default function LoginPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {message && (
+          <div className="mb-4 p-3 bg-primary/10 text-primary border border-primary/20 rounded-md text-sm text-center">
+            {message}
+          </div>
+        )}
         <Tabs defaultValue="patient" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="patient">Patient</TabsTrigger>
