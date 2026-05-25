@@ -12,7 +12,6 @@ export default async function DoctorsPage() {
   const { data: dbDoctors, error } = await supabase
     .from('doctors')
     .select('*, profiles(*)')
-    .eq('is_active', true)
 
   const doctors = (!error && dbDoctors) ? dbDoctors : []
 
@@ -37,9 +36,14 @@ export default async function DoctorsPage() {
           const avatarUrl = doctor.profiles?.avatar_url || '';
 
           return (
-            <Card key={doctor.id} className="overflow-hidden group">
+            <Card key={doctor.id} className={`overflow-hidden group ${!doctor.is_active && 'opacity-70 grayscale-[0.5]'}`}>
               <CardContent className="p-0">
-                <div className="bg-muted aspect-square flex items-center justify-center p-6">
+                <div className="bg-muted aspect-square flex items-center justify-center p-6 relative">
+                  {!doctor.is_active && (
+                    <div className="absolute top-4 right-4 z-10">
+                      <Badge variant="destructive">Unavailable</Badge>
+                    </div>
+                  )}
                   <Avatar className="w-32 h-32 border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
                     <AvatarImage src={avatarUrl} alt={fullName} />
                     <AvatarFallback>{fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}</AvatarFallback>
@@ -55,12 +59,18 @@ export default async function DoctorsPage() {
                   
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p>Experience: <span className="font-medium text-foreground">{doctor.experience_years} Years</span></p>
-                    <p>Availability: <span className="font-medium text-foreground">{doctor.availability || 'Contact Hospital'}</span></p>
+                    <p>Availability: <span className="font-medium text-foreground">{doctor.is_active ? (doctor.availability || 'Contact Hospital') : 'On Leave'}</span></p>
                   </div>
 
-                  <Link href={`/book?doctor=${doctor.id}`} className={buttonVariants({ className: "w-full" })}>
-                    Book Appointment
-                  </Link>
+                  {doctor.is_active ? (
+                    <Link href={`/book?doctor=${doctor.id}`} className={buttonVariants({ className: "w-full" })}>
+                      Book Appointment
+                    </Link>
+                  ) : (
+                    <div className={buttonVariants({ variant: "secondary", className: "w-full opacity-50 cursor-not-allowed" })}>
+                      Cannot Book
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
