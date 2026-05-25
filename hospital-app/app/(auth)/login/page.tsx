@@ -17,14 +17,13 @@ export default function LoginPage() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="patient" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="patient">Patient</TabsTrigger>
             <TabsTrigger value="doctor">Doctor</TabsTrigger>
             <TabsTrigger value="staff">Staff</TabsTrigger>
-            <TabsTrigger value="admin">Admin</TabsTrigger>
           </TabsList>
           
-          {['patient', 'doctor', 'staff', 'admin'].map((role) => (
+          {['patient', 'doctor', 'staff'].map((role) => (
             <TabsContent key={role} value={role} className="space-y-4 mt-0">
               <form action={login} className="space-y-4">
                 <input type="hidden" name="role" value={role} />

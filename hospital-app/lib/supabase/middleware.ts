@@ -35,12 +35,18 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    request.nextUrl.pathname.startsWith('/dashboards')
-  ) {
+  // DEV MODE ADMIN BYPASS
+  if (process.env.NODE_ENV === 'development' && request.nextUrl.pathname.startsWith('/admin')) {
+    return supabaseResponse
+  }
+
+  // Protected routes require authentication
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/admin') || 
+                           request.nextUrl.pathname.startsWith('/doctor') || 
+                           request.nextUrl.pathname.startsWith('/patient') || 
+                           request.nextUrl.pathname.startsWith('/staff')
+
+  if (!user && isProtectedRoute) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = '/login'
