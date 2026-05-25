@@ -77,57 +77,59 @@ export async function signup(formData: FormData) {
   }
   const { email, password, firstName, lastName } = parsed.data
 
-  const { data, error } = await supabase.auth.signUp({
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const adminClient = createAdminClient()
+  
+  // 1. Create user with auto-confirmed email bypassing Supabase email requirements
+  const { data: adminData, error: adminError } = await adminClient.auth.admin.createUser({
     email,
     password,
-    options: {
-      data: {
-        first_name: firstName,
-        last_name: lastName,
-      }
+    email_confirm: true,
+    user_metadata: {
+      first_name: firstName,
+      last_name: lastName,
     }
   })
 
-  if (error) {
-    redirect(`/login?message=${error.message}`)
+  if (adminError) {
+    redirect(`/login?message=${encodeURIComponent(adminError.message)}`)
   }
 
-  // Use Admin Client to ensure profiles and roles are created securely bypassing RLS
-  if (data.user) {
-    try {
-      const { createAdminClient } = await import('@/lib/supabase/admin')
-      const adminClient = createAdminClient()
-      
-      // Explicitly set the user role to patient
-      const { error: userError } = await adminClient.from('users').upsert({
-        id: data.user.id,
-        role: 'patient'
-      })
+  // 2. Sign in immediately to set the session cookies
+  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  })
 
-      if (userError) {
-        console.error("Error inserting into users table:", userError)
-      }
+  if (signInError || !signInData.user) {
+    redirect(`/login?message=Account created but auto-login failed: ${signInError?.message}`)
+  }
 
-      // Upsert the patient profile
-      const { error: profileError } = await adminClient.from('profiles').upsert({
-        id: data.user.id,
-        first_name: firstName,
-        last_name: lastName,
-      })
+  // 3. Use Admin Client to ensure profiles and roles are created securely bypassing RLS
+  try {
+    // Explicitly set the user role to patient
+    const { error: userError } = await adminClient.from('users').upsert({
+      id: signInData.user.id,
+      role: 'patient'
+    })
 
-      if (profileError) {
-        console.error("Error inserting into profiles table:", profileError)
-      }
-    } catch (err: any) {
-      console.error("Registration Admin Client Error:", err)
-      redirect(`/login?message=Account created but failed to save profile: ${err.message}`)
+    if (userError) {
+      console.error("Error inserting into users table:", userError)
     }
-  }
 
-  // If email confirmation is enabled, the session will be null.
-  // The user needs to verify their email before they can access the dashboard.
-  if (!data.session) {
-    redirect(`/login?message=Account created successfully. Please check your email and verify your account before logging in.`)
+    // Upsert the patient profile
+    const { error: profileError } = await adminClient.from('profiles').upsert({
+      id: signInData.user.id,
+      first_name: firstName,
+      last_name: lastName,
+    })
+
+    if (profileError) {
+      console.error("Error inserting into profiles table:", profileError)
+    }
+  } catch (err: any) {
+    console.error("Registration Admin Client Error:", err)
+    redirect(`/login?message=Account created but failed to save profile: ${err.message}`)
   }
 
   revalidatePath('/', 'layout')
