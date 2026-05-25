@@ -72,6 +72,8 @@ export function BookingForm({
     defaultValues: {
       doctor_id: defaultDoctorId || "",
     },
+  })
+
   // Get currently selected doctor and date
   const selectedDoctorId = form.watch("doctor_id")
   const selectedDate = form.watch("appointment_date")
