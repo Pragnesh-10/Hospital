@@ -8,12 +8,22 @@ import { createClient } from '@/lib/supabase/server'
 export default async function DoctorsPage() {
   const supabase = await createClient()
 
-  // Fetch doctors and join with profiles table to get names and avatars
-  const { data: dbDoctors, error } = await supabase
+  // Fetch doctors and join with profiles manually
+  const { data: dbDoctors, error: docError } = await supabase
     .from('doctors')
-    .select('*, profiles(*)')
+    .select('*')
+    
+  const { data: dbProfiles } = await supabase
+    .from('profiles')
+    .select('*')
 
-  const doctors = (!error && dbDoctors) ? dbDoctors : []
+  const doctors = (!docError && dbDoctors) ? dbDoctors.map(doc => {
+    const profile = (dbProfiles || []).find(p => p.id === doc.id)
+    return {
+      ...doc,
+      profiles: profile || null
+    }
+  }) : []
 
   return (
     <div className="container py-20 px-4 md:px-6">

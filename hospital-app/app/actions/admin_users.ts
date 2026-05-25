@@ -58,15 +58,14 @@ export async function provisionAccount(formData: FormData) {
     // 4. Set their role in the users table
     const { error: roleError } = await adminAuthClient
       .from('users')
-      .update({ role: role })
-      .eq('id', newUserId)
+      .upsert({ id: newUserId, role: role })
 
     if (roleError) throw new Error(`Role Error: ${roleError.message}`)
 
     // 5. Create their profile
     const { error: profileError } = await adminAuthClient
       .from('profiles')
-      .insert({
+      .upsert({
         id: newUserId,
         first_name: firstName,
         last_name: lastName
@@ -78,7 +77,7 @@ export async function provisionAccount(formData: FormData) {
     if (role === 'doctor') {
       const { error: docError } = await adminAuthClient
         .from('doctors')
-        .insert({
+        .upsert({
           id: newUserId,
           specialization,
           is_active: true

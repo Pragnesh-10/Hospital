@@ -11,14 +11,26 @@ export default async function DoctorDashboardPage() {
 
   if (!user) redirect('/login')
 
-  const { data: appointments } = await supabase
+  const { data: dbAppointments } = await supabase
     .from('appointments')
-    .select('*, profiles!patient_id(first_name, last_name)')
+    .select('*')
     .eq('doctor_id', user.id)
     .order('appointment_date', { ascending: true })
 
+  const { data: dbProfiles } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name')
+
+  const appointments = (dbAppointments || []).map(appt => {
+    const profile = (dbProfiles || []).find(p => p.id === appt.patient_id)
+    return {
+      ...appt,
+      profiles: profile || null
+    }
+  })
+
   const today = new Date().toISOString().split('T')[0]
-  const todayAppointments = appointments?.filter(a => a.appointment_date === today) || []
+  const todayAppointments = appointments.filter(a => a.appointment_date === today)
 
   return (
     <div className="space-y-6">

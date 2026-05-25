@@ -22,12 +22,21 @@ export async function uploadFacilityImage(formData: FormData) {
   }
 
   try {
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const adminClient = createAdminClient()
+
+    // Ensure bucket exists
+    const { data: buckets } = await adminClient.storage.listBuckets()
+    if (!buckets?.find(b => b.name === 'hospital-images')) {
+      await adminClient.storage.createBucket('hospital-images', { public: true })
+    }
+
     const fileExt = file.name.split('.').pop()
     const fileName = `${facilityId}-${Math.random()}.${fileExt}`
     const filePath = `${fileName}`
 
-    // 3. Upload to Supabase Storage (bucket: hospital-images)
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // 3. Upload to Supabase Storage (bypassing RLS)
+    const { data: uploadData, error: uploadError } = await adminClient.storage
       .from('hospital-images')
       .upload(filePath, file)
 
@@ -37,12 +46,12 @@ export async function uploadFacilityImage(formData: FormData) {
     }
 
     // 4. Get Public URL
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = adminClient.storage
       .from('hospital-images')
       .getPublicUrl(filePath)
 
     // 5. Update Facilities table
-    const { error: dbError } = await supabase
+    const { error: dbError } = await adminClient
       .from('facilities')
       .update({ image_url: publicUrl })
       .eq('id', facilityId)
@@ -77,21 +86,32 @@ export async function uploadDoctorImage(formData: FormData) {
   }
 
   try {
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const adminClient = createAdminClient()
+
+    // 1. Ensure bucket exists
+    const { data: buckets } = await adminClient.storage.listBuckets()
+    if (!buckets?.find(b => b.name === 'hospital-images')) {
+      await adminClient.storage.createBucket('hospital-images', { public: true })
+    }
+
     const fileExt = file.name.split('.').pop()
     const fileName = `doctor-${doctorId}-${Math.random()}.${fileExt}`
     const filePath = `${fileName}`
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // 2. Upload using Admin Client (Bypasses Storage RLS)
+    const { data: uploadData, error: uploadError } = await adminClient.storage
       .from('hospital-images')
       .upload(filePath, file)
 
     if (uploadError) return { error: uploadError.message }
 
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = adminClient.storage
       .from('hospital-images')
       .getPublicUrl(filePath)
 
-    const { error: dbError } = await supabase
+    // 3. Update Database using Admin Client
+    const { error: dbError } = await adminClient
       .from('profiles')
       .update({ avatar_url: publicUrl })
       .eq('id', doctorId)

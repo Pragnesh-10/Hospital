@@ -41,10 +41,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Protected routes require authentication
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/admin') || 
-                           request.nextUrl.pathname.startsWith('/doctor') || 
-                           request.nextUrl.pathname.startsWith('/patient') || 
-                           request.nextUrl.pathname.startsWith('/staff')
+  const protectedPrefixes = ['/admin', '/doctor', '/patient', '/staff']
+  const isProtectedRoute = protectedPrefixes.some(prefix => 
+    request.nextUrl.pathname === prefix || request.nextUrl.pathname.startsWith(`${prefix}/`)
+  )
 
   if (!user && isProtectedRoute) {
     // no user, potentially respond by redirecting the user to the login page

@@ -43,6 +43,11 @@ export default function LoginPage() {
                 <Button className="w-full" type="submit">
                   Login as {role.charAt(0).toUpperCase() + role.slice(1)}
                 </Button>
+                {role !== 'patient' && (
+                  <p className="text-xs text-center text-muted-foreground mt-4">
+                    New {role}s must have their accounts provisioned by the Hospital Admin. Self-registration is not available.
+                  </p>
+                )}
               </form>
             </TabsContent>
           ))}

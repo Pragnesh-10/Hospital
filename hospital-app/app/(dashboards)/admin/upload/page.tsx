@@ -12,10 +12,17 @@ export default async function AdminUploadPage() {
   const { data: userRole } = await supabase.from('users').select('role').eq('id', user.id).single()
   if (userRole?.role !== 'admin') redirect('/login')
 
-  // Fetch doctors and facilities to populate dropdowns
-  const { data: doctors } = await supabase
-    .from('doctors')
-    .select('id, profiles(first_name, last_name)')
+  // Fetch doctors and profiles manually since PostgREST misses the direct FK
+  const { data: dbDoctors } = await supabase.from('doctors').select('id')
+  const { data: dbProfiles } = await supabase.from('profiles').select('id, first_name, last_name')
+  
+  const doctors = (dbDoctors || []).map(doc => {
+    const profile = (dbProfiles || []).find(p => p.id === doc.id)
+    return {
+      id: doc.id,
+      profiles: profile || null
+    }
+  })
 
   const { data: facilities } = await supabase
     .from('facilities')
