@@ -91,15 +91,29 @@ export async function signup(formData: FormData) {
     redirect(`/login?message=${error.message}`)
   }
 
-  // If auto-login is successful (email confirmation disabled in Supabase)
-  // we can insert the profile. If email confirmation is enabled, 
-  // the user needs to confirm email before RLS allows them to insert into profiles.
-  if (data.user && data.session) {
-    await supabase.from('profiles').insert({
+  // Use Admin Client to ensure profiles and roles are created securely bypassing RLS
+  if (data.user) {
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const adminClient = createAdminClient()
+    
+    // Explicitly set the user role to patient
+    await adminClient.from('users').upsert({
+      id: data.user.id,
+      role: 'patient'
+    })
+
+    // Upsert the patient profile
+    await adminClient.from('profiles').upsert({
       id: data.user.id,
       first_name: firstName,
       last_name: lastName,
     })
+  }
+
+  // If email confirmation is enabled, the session will be null.
+  // The user needs to verify their email before they can access the dashboard.
+  if (!data.session) {
+    redirect(`/login?message=Account created successfully. Please check your email and verify your account before logging in.`)
   }
 
   revalidatePath('/', 'layout')
