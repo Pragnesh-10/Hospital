@@ -15,8 +15,9 @@ export default async function AdminUploadPage() {
   if (userRole?.role !== 'admin') redirect('/login')
 
   // Fetch doctors and profiles manually since PostgREST misses the direct FK
-  const { data: dbDoctors } = await supabase.from('doctors').select('id')
-  const { data: dbProfiles } = await supabase.from('profiles').select('id, first_name, last_name')
+  // Use adminClient to bypass RLS policies
+  const { data: dbDoctors } = await adminClient.from('doctors').select('id')
+  const { data: dbProfiles } = await adminClient.from('profiles').select('id, first_name, last_name')
   
   const doctors = (dbDoctors || []).map(doc => {
     const profile = (dbProfiles || []).find(p => p.id === doc.id)
@@ -26,7 +27,8 @@ export default async function AdminUploadPage() {
     }
   })
 
-  const { data: facilities } = await supabase
+  // Fetch facilities using adminClient
+  const { data: facilities } = await adminClient
     .from('facilities')
     .select('id, title')
 

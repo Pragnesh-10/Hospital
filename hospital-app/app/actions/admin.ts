@@ -15,8 +15,8 @@ export async function toggleDoctorStatus(doctorId: string, currentStatus: boolea
   const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
   if (userData?.role !== 'admin') return { error: 'Unauthorized' }
 
-  // Update doctor
-  const { error } = await supabase
+  // Update doctor using adminClient to bypass any potential RLS restrictions
+  const { error } = await adminClient
     .from('doctors')
     .update({ is_active: !currentStatus })
     .eq('id', doctorId)

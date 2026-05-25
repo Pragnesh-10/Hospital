@@ -18,12 +18,12 @@ export default async function ManageDoctorsPage() {
   const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
   if (userData?.role !== 'admin') redirect('/')
 
-  // Fetch doctors and profiles manually
-  const { data: dbDoctors } = await supabase
+  // Fetch doctors and profiles manually using the admin client to ensure we bypass RLS issues
+  const { data: dbDoctors } = await adminClient
     .from('doctors')
     .select('*')
 
-  const { data: dbProfiles } = await supabase
+  const { data: dbProfiles } = await adminClient
     .from('profiles')
     .select('id, first_name, last_name, phone, avatar_url')
 

@@ -14,9 +14,17 @@ export async function createClient() {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
+            cookiesToSet.forEach(({ name, value, options }) => {
+              // Apply stringent security settings (7 days expiry for auth, Strict SameSite)
+              const strictOptions = {
+                ...options,
+                maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+                sameSite: 'strict' as const,
+                secure: process.env.NODE_ENV === 'production',
+                httpOnly: true, // Prevents XSS accessing auth cookies
+              }
+              cookieStore.set(name, value, strictOptions)
+            })
           } catch {}
         },
       },
