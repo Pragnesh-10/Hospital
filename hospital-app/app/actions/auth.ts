@@ -49,8 +49,6 @@ export async function login(formData: FormData) {
 
   const actualRole = userData?.role || 'patient'
   
-  console.log("LOGIN ATTEMPT:", { email, expectedRole: role, fetchedRole: userData?.role, actualRole, userId: data.user.id, userError })
-
   // If they tried to log in using the wrong tab, reject them (unless they are admin)
   if (actualRole !== role && actualRole !== 'admin') {
     await supabase.auth.signOut()
@@ -93,21 +91,34 @@ export async function signup(formData: FormData) {
 
   // Use Admin Client to ensure profiles and roles are created securely bypassing RLS
   if (data.user) {
-    const { createAdminClient } = await import('@/lib/supabase/admin')
-    const adminClient = createAdminClient()
-    
-    // Explicitly set the user role to patient
-    await adminClient.from('users').upsert({
-      id: data.user.id,
-      role: 'patient'
-    })
+    try {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const adminClient = createAdminClient()
+      
+      // Explicitly set the user role to patient
+      const { error: userError } = await adminClient.from('users').upsert({
+        id: data.user.id,
+        role: 'patient'
+      })
 
-    // Upsert the patient profile
-    await adminClient.from('profiles').upsert({
-      id: data.user.id,
-      first_name: firstName,
-      last_name: lastName,
-    })
+      if (userError) {
+        console.error("Error inserting into users table:", userError)
+      }
+
+      // Upsert the patient profile
+      const { error: profileError } = await adminClient.from('profiles').upsert({
+        id: data.user.id,
+        first_name: firstName,
+        last_name: lastName,
+      })
+
+      if (profileError) {
+        console.error("Error inserting into profiles table:", profileError)
+      }
+    } catch (err: any) {
+      console.error("Registration Admin Client Error:", err)
+      redirect(`/login?message=Account created but failed to save profile: ${err.message}`)
+    }
   }
 
   // If email confirmation is enabled, the session will be null.
