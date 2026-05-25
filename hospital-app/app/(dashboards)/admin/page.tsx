@@ -12,6 +12,11 @@ export default async function AdminDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
+  if (userData?.role !== 'admin') redirect('/')
+
   // Fetch live aggregations
   const { count: patientsCount } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'patient')
   const { count: doctorsCount } = await supabase.from('doctors').select('*', { count: 'exact', head: true }).eq('is_active', true)

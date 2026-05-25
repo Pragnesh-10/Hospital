@@ -10,7 +10,9 @@ export async function toggleDoctorStatus(doctorId: string, currentStatus: boolea
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
   
-  const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single()
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
   if (userData?.role !== 'admin') return { error: 'Unauthorized' }
 
   // Update doctor

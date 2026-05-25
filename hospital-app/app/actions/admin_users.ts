@@ -25,7 +25,9 @@ export async function provisionAccount(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single()
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
   if (userData?.role !== 'admin') return { error: 'Unauthorized: Admins only' }
 
   // 2. Strict Zod Validation

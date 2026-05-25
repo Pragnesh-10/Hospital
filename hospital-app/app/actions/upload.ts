@@ -10,7 +10,9 @@ export async function uploadFacilityImage(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: "Not authenticated" }
 
-  const { data: userRole } = await supabase.from('users').select('role').eq('id', user.id).single()
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  const { data: userRole } = await adminClient.from('users').select('role').eq('id', user.id).single();
   if (userRole?.role !== 'admin') return { error: "Not authorized. Admin only." }
 
   // 2. Get file and facility ID
@@ -20,10 +22,8 @@ export async function uploadFacilityImage(formData: FormData) {
   if (!file || !facilityId) {
     return { error: "File and Facility ID are required" }
   }
-
+  
   try {
-    const { createAdminClient } = await import('@/lib/supabase/admin')
-    const adminClient = createAdminClient()
 
     // Ensure bucket exists
     const { data: buckets } = await adminClient.storage.listBuckets()
@@ -75,7 +75,9 @@ export async function uploadDoctorImage(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: "Not authenticated" }
 
-  const { data: userRole } = await supabase.from('users').select('role').eq('id', user.id).single()
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  const { data: userRole } = await adminClient.from('users').select('role').eq('id', user.id).single();
   if (userRole?.role !== 'admin') return { error: "Not authorized. Admin only." }
 
   const file = formData.get('image') as File
@@ -84,10 +86,8 @@ export async function uploadDoctorImage(formData: FormData) {
   if (!file || !doctorId) {
     return { error: "File and Doctor ID are required" }
   }
-
+  
   try {
-    const { createAdminClient } = await import('@/lib/supabase/admin')
-    const adminClient = createAdminClient()
 
     // 1. Ensure bucket exists
     const { data: buckets } = await adminClient.storage.listBuckets()

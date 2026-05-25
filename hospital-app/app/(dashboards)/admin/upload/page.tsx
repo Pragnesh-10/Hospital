@@ -9,7 +9,9 @@ export default async function AdminUploadPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: userRole } = await supabase.from('users').select('role').eq('id', user.id).single()
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  const { data: userRole } = await adminClient.from('users').select('role').eq('id', user.id).single();
   if (userRole?.role !== 'admin') redirect('/login')
 
   // Fetch doctors and profiles manually since PostgREST misses the direct FK

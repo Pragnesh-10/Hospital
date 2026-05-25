@@ -10,12 +10,12 @@ export async function addDoctorAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
   
-  const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single()
+  // 1. Verify admin status using the Admin Client to bypass RLS
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  
+  const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
   if (userData?.role !== 'admin') return { error: 'Unauthorized' }
-
-  // 2. Import and use Admin Client to bypass RLS and create users
-  const { createAdminClient } = await import('@/lib/supabase/admin')
-  const adminClient = createAdminClient()
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string

@@ -38,17 +38,21 @@ export async function login(formData: FormData) {
     redirect(`/login?message=Could not authenticate user`)
   }
 
-  // Fetch their actual role from the database
-  const { data: userData } = await supabase
+  // Fetch their actual role from the database using adminClient to bypass RLS issues
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const adminClient = createAdminClient()
+  const { data: userData, error: userError } = await adminClient
     .from('users')
     .select('role')
     .eq('id', data.user.id)
     .single()
 
   const actualRole = userData?.role || 'patient'
+  
+  console.log("LOGIN ATTEMPT:", { email, expectedRole: role, fetchedRole: userData?.role, actualRole, userId: data.user.id, userError })
 
-  // If they tried to log in using the wrong tab, reject them.
-  if (actualRole !== role) {
+  // If they tried to log in using the wrong tab, reject them (unless they are admin)
+  if (actualRole !== role && actualRole !== 'admin') {
     await supabase.auth.signOut()
     redirect(`/login?message=Unauthorized. You do not have ${role} privileges.`)
   }

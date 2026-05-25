@@ -37,7 +37,11 @@ export async function updateSession(request: NextRequest) {
 
   // DEV MODE ADMIN BYPASS
   if (process.env.NODE_ENV === 'development' && request.nextUrl.pathname.startsWith('/admin')) {
-    return supabaseResponse
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dev-login'
+      return NextResponse.redirect(url)
+    }
   }
 
   // Protected routes require authentication
