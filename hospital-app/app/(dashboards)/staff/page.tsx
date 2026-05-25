@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
+import Link from 'next/link'
 
 export default async function StaffDashboardPage() {
   const supabase = await createClient()
