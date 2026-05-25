@@ -72,37 +72,33 @@ export function BookingForm({
     defaultValues: {
       doctor_id: defaultDoctorId || "",
     },
-  })
-
-  // Get currently selected doctor to filter their specific leaves
+  // Get currently selected doctor and date
   const selectedDoctorId = form.watch("doctor_id")
+  const selectedDate = form.watch("appointment_date")
 
-  // Function to check if a date is within any leave period for the selected doctor
-  const isDateDisabled = (date: Date) => {
-    // Basic rules: past dates are disabled
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    if (date < today) return true
+  // Generate some dummy time slots and filter them based on leaves
+  const allTimeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00"]
+  
+  const timeSlots = allTimeSlots.filter(time => {
+    if (!selectedDoctorId || !selectedDate) return true
+    
+    const [hours, minutes] = time.split(':')
+    const slotDate = new Date(selectedDate)
+    slotDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
 
-    if (!selectedDoctorId) return false
-
-    // Filter leaves for the selected doctor
     const doctorLeaves = leaves.filter(l => l.doctor_id === selectedDoctorId)
     
-    // Check if the given date falls in any leave range
     for (const leave of doctorLeaves) {
       const start = new Date(leave.start_date)
       const end = new Date(leave.end_date)
-      start.setHours(0, 0, 0, 0)
-      end.setHours(23, 59, 59, 999)
-
-      if (date >= start && date <= end) {
-        return true
+      
+      // If the slot falls inside the leave range
+      if (slotDate >= start && slotDate < end) {
+        return false
       }
     }
-
-    return false
-  }
+    return true
+  })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (isGuest && (!values.guest_name || !values.guest_phone)) {
@@ -135,9 +131,6 @@ export function BookingForm({
     }
   }
 
-  // Generate some dummy time slots
-  const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00"]
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -150,8 +143,8 @@ export function BookingForm({
               <FormLabel>Doctor</FormLabel>
               <Select onValueChange={(val) => {
                 field.onChange(val)
-                // Clear selected date if they change the doctor, since the new doctor might be on leave that day
                 form.setValue("appointment_date", undefined as any)
+                form.setValue("appointment_time", "")
               }} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -203,8 +196,15 @@ export function BookingForm({
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={isDateDisabled}
+                      onSelect={(date) => {
+                        field.onChange(date)
+                        form.setValue("appointment_time", "") // Clear time when date changes
+                      }}
+                      disabled={(date) => {
+                        const today = new Date()
+                        today.setHours(0, 0, 0, 0)
+                        return date < today
+                      }}
                     />
                   </PopoverContent>
                 </Popover>

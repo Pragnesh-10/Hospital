@@ -49,17 +49,26 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
-  // Check if the doctor is on leave for the requested date
+  // Construct the full appointment datetime
+  const appointmentDateTime = new Date(`${appointment_date}T${appointment_time}:00`)
+
+  // Check if the doctor is on leave for the requested date/time
   const { data: leaves } = await supabase
     .from('doctor_leaves')
     .select('*')
     .eq('doctor_id', doctor_id)
-    .lte('start_date', appointment_date)
-    .gte('end_date', appointment_date)
 
   if (leaves && leaves.length > 0) {
-    return {
-      error: "This doctor is on leave during the selected date.",
+    const isOverlapping = leaves.some(leave => {
+      const start = new Date(leave.start_date)
+      const end = new Date(leave.end_date)
+      return appointmentDateTime >= start && appointmentDateTime < end
+    })
+
+    if (isOverlapping) {
+      return {
+        error: "This doctor is on leave during the selected time.",
+      }
     }
   }
 

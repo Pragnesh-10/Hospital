@@ -16,14 +16,16 @@ export async function addDoctorLeave(startDate: string, endDate: string, reason?
     .eq('id', user.id)
     .single()
 
-  if (userData?.role !== 'doctor') return { error: 'Only doctors can add leaves.' }
+  if (userData?.role?.toLowerCase() !== 'doctor') {
+    return { error: `Only doctors can add leaves. (Role: ${userData?.role})` }
+  }
 
   // Validate dates
   const start = new Date(startDate)
   const end = new Date(endDate)
   
-  if (start > end) {
-    return { error: 'Start date cannot be after end date.' }
+  if (start >= end) {
+    return { error: 'Start time must be before end time.' }
   }
 
   const { error } = await supabase

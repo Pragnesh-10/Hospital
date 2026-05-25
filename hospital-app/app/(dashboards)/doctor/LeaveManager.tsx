@@ -74,16 +74,16 @@ export function LeaveManager({ initialLeaves }: { initialLeaves: Leave[] }) {
         
         <form onSubmit={handleAddLeave} className="grid sm:grid-cols-4 gap-4 items-end bg-muted/50 p-4 rounded-lg border">
           <div className="space-y-1">
-            <Label>Start Date</Label>
-            <Input type="date" name="start_date" required min={new Date().toISOString().split('T')[0]} />
+            <Label>Start Time</Label>
+            <Input type="datetime-local" name="start_date" required min={new Date().toISOString().slice(0, 16)} />
           </div>
           <div className="space-y-1">
-            <Label>End Date</Label>
-            <Input type="date" name="end_date" required min={new Date().toISOString().split('T')[0]} />
+            <Label>End Time</Label>
+            <Input type="datetime-local" name="end_date" required min={new Date().toISOString().slice(0, 16)} />
           </div>
           <div className="space-y-1">
             <Label>Reason (Optional)</Label>
-            <Input type="text" name="reason" placeholder="Vacation, Conference..." />
+            <Input type="text" name="reason" placeholder="Meeting, Vacation..." />
           </div>
           <Button type="submit" disabled={loading} className="w-full">
             Schedule
@@ -99,9 +99,9 @@ export function LeaveManager({ initialLeaves }: { initialLeaves: Leave[] }) {
               {leaves.map(leave => (
                 <div key={leave.id} className="flex justify-between items-center p-3 text-sm">
                   <div>
-                    <span className="font-medium">{format(new Date(leave.start_date), 'MMM d, yyyy')}</span>
+                    <span className="font-medium">{format(new Date(leave.start_date), 'MMM d, h:mm a')}</span>
                     {" to "}
-                    <span className="font-medium">{format(new Date(leave.end_date), 'MMM d, yyyy')}</span>
+                    <span className="font-medium">{format(new Date(leave.end_date), 'MMM d, h:mm a')}</span>
                     {leave.reason && <span className="text-muted-foreground ml-2">({leave.reason})</span>}
                   </div>
                   <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteLeave(leave.id)} disabled={loading}>
