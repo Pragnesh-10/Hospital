@@ -14,12 +14,22 @@ export default async function BookAppointmentPage({
   const doctorId = resolvedParams?.doctor;
 
   // Fetch doctors from the database
-  const { data: dbDoctors, error } = await supabase
+  const { data: rawDoctors, error } = await supabase
     .from('doctors')
-    .select('id, specialization, profiles(first_name, last_name)')
+    .select('id, specialization')
     .eq('is_active', true)
 
-  const doctors = (!error && dbDoctors) ? dbDoctors : []
+  const { data: dbProfiles } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name')
+
+  const doctors = (!error && rawDoctors) ? rawDoctors.map(doc => {
+    const profile = (dbProfiles || []).find(p => p.id === doc.id)
+    return {
+      ...doc,
+      profiles: profile || null
+    }
+  }) : []
 
   const { data: { user } } = await supabase.auth.getUser()
 
