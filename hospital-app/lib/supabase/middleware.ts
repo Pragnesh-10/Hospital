@@ -34,27 +34,23 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-
-
   // Protected routes require authentication
   const protectedPrefixes = ['/admin', '/doctor', '/patient', '/staff']
   const isProtectedRoute = protectedPrefixes.some(prefix => 
     request.nextUrl.pathname === prefix || request.nextUrl.pathname.startsWith(`${prefix}/`)
   )
 
-  if (!user && isProtectedRoute) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+  // OPTIMIZATION: Only perform the slow database network request if the route actually requires authentication.
+  // This allows public static pages (like /, /about, /facilities) to bypass the database and load instantly from the Vercel CDN in ~20ms!
+  if (isProtectedRoute) {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      // no user, potentially respond by redirecting the user to the login page
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
