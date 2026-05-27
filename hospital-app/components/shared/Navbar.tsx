@@ -28,6 +28,9 @@ export function Navbar({ user, role }: { user: any; role: string | null }) {
       <Link href="/about" className="text-sm font-medium transition-colors hover:text-primary">
         About
       </Link>
+      <Link href="/services" className="text-sm font-medium transition-colors hover:text-primary">
+        Services
+      </Link>
       <Link href="/doctors" className="text-sm font-medium transition-colors hover:text-primary">
         Doctors
       </Link>

@@ -28,10 +28,10 @@ export function Footer() {
         <div>
           <h3 className="font-semibold mb-4">Services</h3>
           <ul className="space-y-2">
-            <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary">Emergency Care</Link></li>
-            <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary">Outpatient Department</Link></li>
-            <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary">Diagnostics</Link></li>
-            <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary">Pharmacy</Link></li>
+            <li><Link href="/services#emergency" className="text-sm text-muted-foreground hover:text-primary">Emergency Care</Link></li>
+            <li><Link href="/services#opd" className="text-sm text-muted-foreground hover:text-primary">Outpatient Department</Link></li>
+            <li><Link href="/services#diagnostics" className="text-sm text-muted-foreground hover:text-primary">Diagnostics</Link></li>
+            <li><Link href="/services#pharmacy" className="text-sm text-muted-foreground hover:text-primary">Pharmacy</Link></li>
           </ul>
         </div>
 
