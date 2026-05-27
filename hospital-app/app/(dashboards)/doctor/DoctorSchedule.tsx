@@ -57,7 +57,7 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
         ).filter(a => a.id !== appt.id) // exclude current
         
         return (
-          <div key={appt.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+          <div key={appt.id} className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 last:border-0 last:pb-0 gap-4">
             <div>
               <p className="font-medium">
                 {appt.appointment_number && <span className="text-primary mr-2">{appt.appointment_number}</span>}
@@ -66,7 +66,7 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
               <p className="text-sm text-muted-foreground capitalize">{appt.status} - {appt.reason || 'No reason provided'}</p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 justify-between sm:justify-end w-full sm:w-auto">
               <div className="text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full whitespace-nowrap">
                 {appt.appointment_time}
               </div>
@@ -80,7 +80,7 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
                     View / Notes
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                   <DialogHeader>
                     <DialogTitle>Patient Visit: {patientName}</DialogTitle>
                   </DialogHeader>

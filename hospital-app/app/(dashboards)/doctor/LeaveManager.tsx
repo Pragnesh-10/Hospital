@@ -74,7 +74,7 @@ export function LeaveManager({ initialLeaves }: { initialLeaves: Leave[] }) {
       </CardHeader>
       <CardContent className="space-y-6">
         
-        <form onSubmit={handleAddLeave} className="grid sm:grid-cols-4 gap-4 items-end bg-muted/50 p-4 rounded-lg border">
+        <form onSubmit={handleAddLeave} className="grid sm:grid-cols-4 gap-4 sm:items-end bg-muted/50 p-4 rounded-lg border">
           <div className="space-y-1">
             <Label>Start Time</Label>
             <Input type="datetime-local" name="start_date" required min={new Date().toISOString().slice(0, 16)} />
@@ -99,14 +99,16 @@ export function LeaveManager({ initialLeaves }: { initialLeaves: Leave[] }) {
           ) : (
             <div className="border rounded-md divide-y">
               {leaves.map(leave => (
-                <div key={leave.id} className="flex justify-between items-center p-3 text-sm">
-                  <div>
-                    <span className="font-medium">{format(new Date(leave.start_date), 'MMM d, h:mm a')}</span>
-                    {" to "}
-                    <span className="font-medium">{format(new Date(leave.end_date), 'MMM d, h:mm a')}</span>
-                    {leave.reason && <span className="text-muted-foreground ml-2">({leave.reason})</span>}
+                <div key={leave.id} className="flex justify-between items-center p-3 text-sm gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                      <span className="font-medium">{format(new Date(leave.start_date), 'MMM d, h:mm a')}</span>
+                      <span className="text-muted-foreground text-xs">to</span>
+                      <span className="font-medium">{format(new Date(leave.end_date), 'MMM d, h:mm a')}</span>
+                    </div>
+                    {leave.reason && <p className="text-muted-foreground text-xs mt-1 truncate">{leave.reason}</p>}
                   </div>
-                  <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteLeave(leave.id)} disabled={loading}>
+                  <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 shrink-0" onClick={() => handleDeleteLeave(leave.id)} disabled={loading}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
