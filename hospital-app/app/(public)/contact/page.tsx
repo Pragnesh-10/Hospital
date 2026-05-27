@@ -1,11 +1,39 @@
+"use client"
+
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function ContactPage() {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!firstName || !lastName || !email || !message) {
+      toast.error('Please fill in all required fields.')
+      return
+    }
+
+    setIsSubmitting(true)
+    setTimeout(() => {
+      toast.success('Thank you! Your message has been received.')
+      setFirstName('')
+      setLastName('')
+      setEmail('')
+      setMessage('')
+      setIsSubmitting(false)
+    }, 800)
+  }
+
   return (
     <div className="container py-20 px-4 md:px-6">
       <div className="text-center mb-12 space-y-4">
@@ -26,26 +54,54 @@ export default function ContactPage() {
                 </p>
               </div>
 
-              <form className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="first-name">First name</Label>
-                    <Input id="first-name" placeholder="John" />
+                    <Input 
+                      id="first-name" 
+                      placeholder="John" 
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="last-name">Last name</Label>
-                    <Input id="last-name" placeholder="Doe" />
+                    <Input 
+                      id="last-name" 
+                      placeholder="Doe" 
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="john@example.com" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="john@example.com" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="message">Message</Label>
-                  <Textarea id="message" placeholder="How can we help you?" className="min-h-[120px]" />
+                  <Textarea 
+                    id="message" 
+                    placeholder="How can we help you?" 
+                    className="min-h-[120px]" 
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    required
+                  />
                 </div>
-                <Button type="submit" className="w-full">Send Message</Button>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                </Button>
               </form>
             </CardContent>
           </Card>
@@ -112,3 +168,4 @@ export default function ContactPage() {
     </div>
   )
 }
+

@@ -18,7 +18,7 @@ export async function saveMedicalNotes(formData: FormData) {
   // 2. Verify doctor owns this appointment
   const { data: appointment, error: fetchError } = await supabase
     .from('appointments')
-    .select('doctor_id')
+    .select('doctor_id, appointment_date, appointment_time, status')
     .eq('id', appointmentId)
     .single()
 
@@ -26,10 +26,20 @@ export async function saveMedicalNotes(formData: FormData) {
     return { error: "Not authorized to modify this appointment" }
   }
 
+  // Construct wall-clock date-time comparison
+  const now = new Date()
+  const apptTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`)
+  const isPast = now >= apptTime
+
+  const updatePayload: any = { medical_notes: notes }
+  if (isPast && (appointment.status === 'pending' || appointment.status === 'in_progress')) {
+    updatePayload.status = 'completed'
+  }
+
   // 3. Update notes
   const { error: updateError } = await supabase
     .from('appointments')
-    .update({ medical_notes: notes, status: 'completed' })
+    .update(updatePayload)
     .eq('id', appointmentId)
 
   if (updateError) {

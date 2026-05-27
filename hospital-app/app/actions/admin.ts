@@ -72,3 +72,50 @@ export async function updateDoctorSettings(doctorId: string, formData: FormData)
   return { success: true }
 }
 
+export async function getSystemSettings() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('*')
+
+  if (error) {
+    console.error("Error fetching system settings:", error)
+    return { error: error.message }
+  }
+
+  const settings: Record<string, any> = {}
+  data?.forEach(item => {
+    settings[item.key] = item.value
+  })
+
+  return { settings }
+}
+
+export async function updateSystemSetting(key: string, value: any) {
+  const supabase = await createClient()
+
+  // Verify admin status
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+  
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const adminClient = createAdminClient()
+  const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single()
+  if (userData?.role !== 'admin') return { error: 'Unauthorized' }
+
+  const { error } = await adminClient
+    .from('system_settings')
+    .upsert({ key, value })
+
+  if (error) {
+    console.error("Error updating system settings:", error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/settings')
+  revalidatePath('/book')
+  revalidatePath('/about')
+  
+  return { success: true }
+}
+

@@ -54,12 +54,14 @@ export function BookingForm({
   defaultDoctorId, 
   isGuest = false,
   leaves = [],
+  appointments = [],
   isWalkin = false,
 }: { 
   doctors: Doctor[], 
   defaultDoctorId?: string, 
   isGuest?: boolean,
   leaves?: any[],
+  appointments?: any[],
   isWalkin?: boolean,
 }) {
   const router = useRouter()
@@ -157,13 +159,26 @@ export function BookingForm({
     return slots
   }, [interval])
   
-  const timeSlots = useMemo(() => {
-    return allTimeSlots.filter(time => {
-      if (!selectedDoctorId || !selectedDate) return true
+  const timeSlotsWithStatus = useMemo(() => {
+    return allTimeSlots.map(time => {
+      if (!selectedDoctorId || !selectedDate) {
+        return { time, isDisabled: false, reason: null as 'booked' | 'leave' | null }
+      }
       
       const [hours, minutes] = time.split(':')
       const slotDate = new Date(selectedDate)
       slotDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+
+      // Double Booking Check: check if already booked
+      const timeStr = `${time}:00`
+      const isBooked = appointments.some(appt => 
+        appt.doctor_id === selectedDoctorId &&
+        appt.appointment_date === format(selectedDate, 'yyyy-MM-dd') &&
+        appt.appointment_time === timeStr
+      )
+      if (isBooked) {
+        return { time, isDisabled: true, reason: 'booked' as const }
+      }
 
       const doctorLeaves = leaves.filter(l => l.doctor_id === selectedDoctorId)
       
@@ -179,12 +194,12 @@ export function BookingForm({
         
         // If the slot falls inside the leave range
         if (slotDate >= start && slotDate < end) {
-          return false
+          return { time, isDisabled: true, reason: 'leave' as const }
         }
       }
-      return true
+      return { time, isDisabled: false, reason: null as 'booked' | 'leave' | null }
     })
-  }, [allTimeSlots, selectedDoctorId, selectedDate, leaves])
+  }, [allTimeSlots, selectedDoctorId, selectedDate, leaves, appointments])
 
   async function onSubmit(values: z.infer<typeof dynamicFormSchema>) {
     if (isGuest && (!values.guest_name || !values.guest_phone || !values.guest_address || !values.guest_city || !values.guest_state || !values.guest_country)) {
@@ -467,9 +482,9 @@ export function BookingForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {timeSlots.map((time) => (
-                      <SelectItem key={time} value={`${time}:00`}>
-                        {time}
+                    {timeSlotsWithStatus.map(({ time, isDisabled, reason }) => (
+                      <SelectItem key={time} value={`${time}:00`} disabled={isDisabled}>
+                        {time} {isDisabled && (reason === 'booked' ? '(Booked)' : '(Doctor on Leave)')}
                       </SelectItem>
                     ))}
                   </SelectContent>

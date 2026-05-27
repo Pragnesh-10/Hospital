@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { saveMedicalNotes } from '@/app/actions/medical_notes'
+import { getPatientHistory } from '@/app/actions/appointments'
 import { toast } from 'sonner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
@@ -25,9 +26,39 @@ type Appointment = {
   patient_age?: number | null
 }
 
-export function DoctorSchedule({ appointments, allAppointments }: { appointments: Appointment[], allAppointments: Appointment[] }) {
+export function DoctorSchedule({ appointments }: { appointments: Appointment[] }) {
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
+  const [history, setHistory] = useState<any[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    const appt = selectedAppt
+    if (!appt) {
+      setHistory([])
+      return
+    }
+
+    async function loadHistory(currentAppt: Appointment) {
+      setLoadingHistory(true)
+      try {
+        const res = await getPatientHistory(currentAppt.patient_id, currentAppt.guest_phone)
+        if (res.error) {
+          toast.error(res.error)
+        } else if (res.history) {
+          const filtered = res.history.filter((h: any) => h.id !== currentAppt.id)
+          setHistory(filtered)
+        }
+      } catch (err) {
+        console.error(err)
+        toast.error("Failed to load patient history")
+      } finally {
+        setLoadingHistory(false)
+      }
+    }
+
+    loadHistory(appt)
+  }, [selectedAppt])
 
   async function handleSaveNotes(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -52,12 +83,6 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
       {appointments.length > 0 ? appointments.map((appt) => {
         const patientName = appt.profiles ? `${appt.profiles.first_name} ${appt.profiles.last_name}` : appt.guest_name || 'Guest'
         
-        // Find historical appointments for this patient
-        const history = allAppointments.filter(a => 
-          (a.patient_id && a.patient_id === appt.patient_id) || 
-          (a.guest_phone && a.guest_phone === appt.guest_phone)
-        ).filter(a => a.id !== appt.id) // exclude current
-        
         return (
           <div key={appt.id} className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 last:border-0 last:pb-0 gap-4">
             <div>
@@ -79,11 +104,8 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
               <Dialog open={selectedAppt?.id === appt.id} onOpenChange={(val) => {
                 if (!val) setSelectedAppt(null)
               }}>
-                {/* @ts-ignore - Radix UI React 19 type clash */}
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={() => setSelectedAppt(appt)}>
-                    View / Notes
-                  </Button>
+                <DialogTrigger render={<Button variant="outline" size="sm" onClick={() => setSelectedAppt(appt)} />}>
+                  View / Notes
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                   <DialogHeader>
@@ -117,7 +139,11 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
                         </form>
                       </div>
 
-                      {history.length > 0 && (
+                      {loadingHistory ? (
+                        <div className="pt-4 border-t text-center text-sm text-muted-foreground">
+                          Loading patient history...
+                        </div>
+                      ) : history.length > 0 ? (
                         <div className="space-y-3 pt-4 border-t">
                           <h4 className="font-semibold">Patient History ({history.length} previous visits)</h4>
                           <div className="space-y-3">
@@ -133,7 +159,7 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
                             ))}
                           </div>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </ScrollArea>
                 </DialogContent>
@@ -147,3 +173,4 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
     </div>
   )
 }
+

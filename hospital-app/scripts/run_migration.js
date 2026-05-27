@@ -82,6 +82,34 @@ async function runMigration() {
       console.log("- Column slot_interval_min already exists on doctors");
     }
 
+    // 7. Create system_settings table and seed it
+    try {
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS public.system_settings (
+          key TEXT PRIMARY KEY,
+          value JSONB NOT NULL
+        );
+      `);
+      console.log("✓ Ensured system_settings table exists");
+      
+      // Seed default configs if not already set
+      await client.query(`
+        INSERT INTO public.system_settings (key, value) VALUES 
+        ('allow_guest_bookings', 'true'::jsonb),
+        ('maintenance_mode', 'false'::jsonb),
+        ('certifications', '[
+          {"name": "ISO 9001:2015", "description": "Quality Management System"},
+          {"name": "NABH Accredited", "description": "National Accreditation Board for Hospitals"},
+          {"name": "JCI Accreditation", "description": "Joint Commission International"}
+        ]'::jsonb)
+        ON CONFLICT (key) DO NOTHING;
+      `);
+      console.log("✓ Seeded default system settings");
+      altered = true;
+    } catch (e) {
+      console.log("- Note: system_settings table or seed operation skipped or encountered notice:", e.message);
+    }
+
     if (altered) {
       console.log("\n>>> Database migration completed successfully!");
     } else {

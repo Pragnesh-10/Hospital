@@ -90,6 +90,12 @@ export interface Database {
           }
         ]
       }
+      system_settings: {
+        Row: { key: string; value: Json }
+        Insert: { key: string; value: Json }
+        Update: { key?: string; value?: Json }
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }

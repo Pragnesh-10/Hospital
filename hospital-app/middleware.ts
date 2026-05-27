@@ -20,6 +20,57 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
   })
 }
 
+// Simple In-Memory Rate Limiting Fallback for when Upstash Redis is not configured
+const fallbackStore = new Map<string, { count: number; resetTime: number }>()
+const FALLBACK_LIMIT = 100 // 100 requests per minute
+const FALLBACK_WINDOW_MS = 60 * 1000 // 1 minute
+
+function checkFallbackRateLimit(ip: string): { success: boolean; limit: number; remaining: number; reset: number } {
+  const now = Date.now()
+  
+  // Cleanup store occasionally to prevent memory leak
+  if (fallbackStore.size > 1000) {
+    for (const [key, val] of fallbackStore.entries()) {
+      if (now > val.resetTime) {
+        fallbackStore.delete(key)
+      }
+    }
+    if (fallbackStore.size > 500) {
+      fallbackStore.clear()
+    }
+  }
+
+  const record = fallbackStore.get(ip)
+
+  if (!record || now > record.resetTime) {
+    const resetTime = now + FALLBACK_WINDOW_MS
+    fallbackStore.set(ip, { count: 1, resetTime })
+    return {
+      success: true,
+      limit: FALLBACK_LIMIT,
+      remaining: FALLBACK_LIMIT - 1,
+      reset: Math.ceil(resetTime / 1000),
+    }
+  }
+
+  if (record.count >= FALLBACK_LIMIT) {
+    return {
+      success: false,
+      limit: FALLBACK_LIMIT,
+      remaining: 0,
+      reset: Math.ceil(record.resetTime / 1000),
+    }
+  }
+
+  record.count += 1
+  return {
+    success: true,
+    limit: FALLBACK_LIMIT,
+    remaining: FALLBACK_LIMIT - record.count,
+    reset: Math.ceil(record.resetTime / 1000),
+  }
+}
+
 export async function middleware(request: NextRequest) {
   // 1. Rate Limiting Protection
   // Get IP (Vercel forwards it in x-forwarded-for)
@@ -30,6 +81,20 @@ export async function middleware(request: NextRequest) {
     
     if (!success) {
       return new NextResponse('Too Many Requests. Please try again later.', {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': limit.toString(),
+          'X-RateLimit-Remaining': remaining.toString(),
+          'X-RateLimit-Reset': reset.toString(),
+          'Retry-After': '60'
+        },
+      })
+    }
+  } else {
+    // Fallback in-memory rate limiting when Redis environment variables are missing
+    const { success, limit, remaining, reset } = checkFallbackRateLimit(ip)
+    if (!success) {
+      return new NextResponse('Too Many Requests (Local Fallback). Please try again later.', {
         status: 429,
         headers: {
           'X-RateLimit-Limit': limit.toString(),

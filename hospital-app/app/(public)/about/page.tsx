@@ -1,4 +1,16 @@
-export default function AboutPage() {
+import { getSystemSettings } from '@/app/actions/admin'
+
+export default async function AboutPage() {
+  const res = await getSystemSettings()
+  
+  const certifications = Array.isArray(res.settings?.certifications)
+    ? res.settings.certifications
+    : [
+        { name: "ISO 9001:2015", description: "Quality Management System" },
+        { name: "NABH Accredited", description: "National Accreditation Board for Hospitals" },
+        { name: "JCI Accreditation", description: "Joint Commission International" }
+      ]
+
   return (
     <div className="container py-20 px-4 md:px-6">
       <div className="max-w-3xl mx-auto space-y-12">
@@ -27,21 +39,16 @@ export default function AboutPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-bold">Licenses & Certifications</h2>
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="p-4 border rounded-lg bg-muted/50">
-              <h3 className="font-semibold">ISO 9001:2015</h3>
-              <p className="text-sm text-muted-foreground">Quality Management System</p>
-            </div>
-            <div className="p-4 border rounded-lg bg-muted/50">
-              <h3 className="font-semibold">NABH Accredited</h3>
-              <p className="text-sm text-muted-foreground">National Accreditation Board for Hospitals</p>
-            </div>
-            <div className="p-4 border rounded-lg bg-muted/50">
-              <h3 className="font-semibold">JCI Accreditation</h3>
-              <p className="text-sm text-muted-foreground">Joint Commission International</p>
-            </div>
+            {certifications.map((cert: any, i: number) => (
+              <div key={i} className="p-4 border rounded-lg bg-muted/50">
+                <h3 className="font-semibold">{cert.name}</h3>
+                <p className="text-sm text-muted-foreground">{cert.description}</p>
+              </div>
+            ))}
           </div>
         </section>
       </div>
     </div>
   )
 }
+

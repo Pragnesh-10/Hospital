@@ -48,17 +48,33 @@ export async function lookupAppointment(formData: FormData) {
   }
 
   const query = parsed.data.query.trim()
+  
+  // Sanitization for PostgREST security:
+  // - appointment_number only allows alphanumeric and dash
+  // - phone lookup only allows digits and plus
+  const safeTokenQuery = query.replace(/[^a-zA-Z0-9\-]/g, '')
+  const safePhoneQuery = query.replace(/[^0-9+]/g, '')
   const cleanQuery = query.replace(/\D/g, '')
+
+  if (!safeTokenQuery && !safePhoneQuery) {
+    return { error: 'No active appointments found for this information.' }
+  }
+
   const supabaseAdmin = createAdminClient()
 
-  // We search for either the phone number (guest_phone OR profiles.phone) 
-  // or the appointment_number
-  
-  // First query: search appointments by token or guest phone
-  let orCondition = `appointment_number.eq.${query},guest_phone.eq.${query}`
-  if (cleanQuery && cleanQuery.length >= 5) {
-    orCondition += `,guest_phone.eq.${cleanQuery}`
+  // Construct secure .or conditions free of syntax delimiters like parentheses, commas, colons, or ampersands
+  let orConditions: string[] = []
+  if (safeTokenQuery) {
+    orConditions.push(`appointment_number.eq.${safeTokenQuery}`)
   }
+  if (safePhoneQuery) {
+    orConditions.push(`guest_phone.eq.${safePhoneQuery}`)
+  }
+  if (cleanQuery && cleanQuery !== safePhoneQuery) {
+    orConditions.push(`guest_phone.eq.${cleanQuery}`)
+  }
+
+  const orCondition = orConditions.join(',')
 
   let { data: appointments, error } = await supabaseAdmin
     .from('appointments')

@@ -14,9 +14,12 @@ export default async function DoctorDashboardPage() {
 
   if (!user) redirect('/login')
 
+  const today = new Date().toISOString().split('T')[0]
+
   // Fetch all necessary data concurrently, utilizing SQL joins for profiles
   const [
-    { data: dbAppointments },
+    { data: todayAppointmentsRes },
+    { count: totalAppointmentsCount },
     { data: doctorLeaves },
     { data: doctorData }
   ] = await Promise.all([
@@ -24,7 +27,13 @@ export default async function DoctorDashboardPage() {
       .from('appointments')
       .select('*, profiles(id, first_name, last_name)')
       .eq('doctor_id', user.id)
-      .order('appointment_date', { ascending: true }),
+      .eq('appointment_date', today)
+      .order('appointment_time', { ascending: true }),
+      
+    supabase
+      .from('appointments')
+      .select('id', { count: 'exact', head: true })
+      .eq('doctor_id', user.id),
       
     supabase
       .from('doctor_leaves')
@@ -39,10 +48,8 @@ export default async function DoctorDashboardPage() {
       .single()
   ])
 
-  const appointments = dbAppointments || []
-
-  const today = new Date().toISOString().split('T')[0]
-  const todayAppointments = appointments.filter(a => a.appointment_date === today)
+  const todayAppointments = todayAppointmentsRes || []
+  const pendingAppointmentsCount = todayAppointments.filter(a => a.status === 'pending' || a.status === 'in_progress').length
 
   return (
     <div className="space-y-6">
@@ -68,18 +75,18 @@ export default async function DoctorDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{appointments?.length || 0}</div>
+            <div className="text-2xl font-bold">{totalAppointmentsCount || 0}</div>
             <p className="text-xs text-muted-foreground">Historical and upcoming</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Pending Reports to Review</CardTitle>
+            <CardTitle className="text-sm font-medium">Pending Appointments</CardTitle>
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Require your attention</p>
+            <div className="text-2xl font-bold">{pendingAppointmentsCount}</div>
+            <p className="text-xs text-muted-foreground">Require check-in or notes</p>
           </CardContent>
         </Card>
       </div>
@@ -89,7 +96,7 @@ export default async function DoctorDashboardPage() {
             <CardTitle>Today's Schedule</CardTitle>
           </CardHeader>
           <CardContent>
-            <DoctorSchedule appointments={todayAppointments} allAppointments={appointments || []} />
+            <DoctorSchedule appointments={todayAppointments} />
           </CardContent>
         </Card>
 

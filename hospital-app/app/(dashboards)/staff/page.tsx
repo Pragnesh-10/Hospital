@@ -36,6 +36,8 @@ export default async function StaffDashboardPage() {
       .eq('is_active', true)
   ])
 
+  const pendingAppointmentsCount = todayAppointments?.filter(a => a.status === 'pending').length || 0
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 justify-end items-start sm:items-center">
@@ -67,12 +69,12 @@ export default async function StaffDashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Pending Reports</CardTitle>
+            <CardTitle className="text-sm font-medium">Pending Check-ins</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Awaiting review</p>
+            <div className="text-2xl font-bold">{pendingAppointmentsCount}</div>
+            <p className="text-xs text-muted-foreground">Awaiting check-in</p>
           </CardContent>
         </Card>
       </div>

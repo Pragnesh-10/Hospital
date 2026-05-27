@@ -184,3 +184,48 @@ export async function createAppointment(formData: FormData) {
     appointment: newAppt,
   }
 }
+
+export async function getPatientHistory(patientId?: string | null, guestPhone?: string | null) {
+  if (!patientId && !guestPhone) {
+    return { history: [] }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  // Check role: doctor, staff, admin
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData || !['doctor', 'staff', 'admin'].includes(userData.role)) {
+    return { error: 'Unauthorized: Doctor or Staff privileges required' }
+  }
+
+  let query = supabase
+    .from('appointments')
+    .select('id, appointment_date, appointment_time, status, reason, medical_notes')
+
+  if (patientId && guestPhone) {
+    query = query.or(`patient_id.eq.${patientId},guest_phone.eq.${guestPhone}`)
+  } else if (patientId) {
+    query = query.eq('patient_id', patientId)
+  } else if (guestPhone) {
+    query = query.eq('guest_phone', guestPhone)
+  }
+
+  const { data, error } = await query
+    .order('appointment_date', { ascending: false })
+    .order('appointment_time', { ascending: false })
+
+  if (error) {
+    console.error("Failed to fetch patient history:", error)
+    return { error: 'Failed to fetch patient history' }
+  }
+
+  return { history: data || [] }
+}
+

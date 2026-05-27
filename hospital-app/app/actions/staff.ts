@@ -12,6 +12,17 @@ export async function updateAppointmentStatus(id: string, status: string) {
     return { error: 'Unauthorized' }
   }
 
+  // Verify staff or admin role
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (userData?.role !== 'staff' && userData?.role !== 'admin') {
+    return { error: 'Unauthorized: Staff or Admin privileges required' }
+  }
+
   // Update the appointment
   const { error } = await supabase
     .from('appointments')
@@ -36,6 +47,17 @@ export async function rescheduleAppointment(id: string, newDate: string, newTime
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Unauthorized' }
+  }
+
+  // Verify staff or admin role
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (userData?.role !== 'staff' && userData?.role !== 'admin') {
+    return { error: 'Unauthorized: Staff or Admin privileges required' }
   }
 
   // Fetch appointment to get doctor_id
