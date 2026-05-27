@@ -28,7 +28,7 @@ export default function HomePage() {
                 </Link>
               </div>
               
-              <div className="grid grid-cols-3 gap-4 pt-8 border-t">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 border-t">
                 <div>
                   <h3 className="text-3xl font-bold text-primary">50+</h3>
                   <p className="text-sm text-muted-foreground">Expert Doctors</p>
