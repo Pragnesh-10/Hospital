@@ -9,9 +9,11 @@ export default async function DoctorsPage() {
   const supabase = await createClient()
 
   // Fetch doctors and join with profiles automatically using the newly added Foreign Key
-  const { data: doctors, error: docError } = await supabase
+  const { data, error: docError } = await supabase
     .from('doctors')
     .select('*, profiles(*)')
+    
+  const doctors = data || []
 
   return (
     <div className="container py-20 px-4 md:px-6">

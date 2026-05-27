@@ -9,9 +9,11 @@ export default async function ManageDoctorsPage() {
   const { adminClient } = await requireAdmin()
 
   // Fetch doctors and profiles using a single joined query now that the FK exists
-  const { data: doctors } = await adminClient
+  const { data } = await adminClient
     .from('doctors')
     .select('*, profiles(id, first_name, last_name, phone, avatar_url)')
+    
+  const doctors = data || []
 
   return (
     <div className="space-y-6">
