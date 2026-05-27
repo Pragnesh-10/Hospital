@@ -52,8 +52,8 @@ export async function updateDoctorSettings(doctorId: string, formData: FormData)
   const intervalStr = formData.get('interval') as string
   const interval = parseInt(intervalStr, 10)
 
-  if (isNaN(interval) || ![15, 30, 45, 60].includes(interval)) {
-    return { error: 'Please select a valid slot interval (15, 30, 45, or 60 minutes).' }
+  if (isNaN(interval) || ![5, 10, 15, 30, 45, 60].includes(interval)) {
+    return { error: 'Please select a valid slot interval (5, 10, 15, 30, 45, or 60 minutes).' }
   }
 
   const { error } = await adminClient
