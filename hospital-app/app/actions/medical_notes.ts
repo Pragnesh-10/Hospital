@@ -37,6 +37,8 @@ export async function saveMedicalNotes(formData: FormData) {
     return { error: "Failed to save medical notes" }
   }
 
-  revalidatePath('/doctor')
+  revalidatePath('/doctor', 'layout')
+  revalidatePath('/staff', 'layout')
+  revalidatePath('/patient', 'layout')
   return { success: true }
 }

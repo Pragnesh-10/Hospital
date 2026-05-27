@@ -128,11 +128,14 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
+  // Revalidate all dashboards so the new appointment appears immediately
+  revalidatePath('/doctor', 'layout')
+  revalidatePath('/staff', 'layout')
+
   if (user && !is_walkin) {
     revalidatePath('/patient', 'layout')
     redirect('/patient?success=Appointment+booked+successfully')
   } else if (is_walkin) {
-    revalidatePath('/staff', 'layout')
     redirect('/staff?success=Walk-in+appointment+booked')
   } else {
     // If guest, redirect back to doctors page with success message

@@ -24,6 +24,8 @@ export async function updateAppointmentStatus(id: string, status: string) {
   }
 
   revalidatePath('/staff', 'layout')
+  revalidatePath('/doctor', 'layout')
+  revalidatePath('/patient', 'layout')
   return { success: true }
 }
 
@@ -52,5 +54,7 @@ export async function rescheduleAppointment(id: string, newDate: string, newTime
   }
 
   revalidatePath('/staff', 'layout')
+  revalidatePath('/doctor', 'layout')
+  revalidatePath('/patient', 'layout')
   return { success: true }
 }
