@@ -45,6 +45,9 @@ const formSchema = z.object({
   guest_name: z.string().optional(),
   guest_phone: z.string().optional(),
   guest_email: z.string().email("Invalid email").optional().or(z.literal("")),
+  guest_city: z.string().optional(),
+  guest_state: z.string().optional(),
+  guest_country: z.string().optional(),
 })
 
 type Doctor = {
@@ -57,12 +60,14 @@ export function BookingForm({
   doctors, 
   defaultDoctorId, 
   isGuest = false,
-  leaves = []
+  leaves = [],
+  isWalkin = false,
 }: { 
   doctors: Doctor[], 
   defaultDoctorId?: string, 
   isGuest?: boolean,
-  leaves?: any[]
+  leaves?: any[],
+  isWalkin?: boolean,
 }) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -105,8 +110,8 @@ export function BookingForm({
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (isGuest && (!values.guest_name || !values.guest_phone)) {
-      toast.error("Please provide your name and phone number to book as a guest.")
+    if (isGuest && (!values.guest_name || !values.guest_phone || !values.guest_city || !values.guest_state || !values.guest_country)) {
+      toast.error("Please provide all required guest information.")
       return
     }
 
@@ -120,6 +125,10 @@ export function BookingForm({
       if (isGuest && values.guest_name) formData.append('guest_name', values.guest_name)
       if (isGuest && values.guest_email) formData.append('guest_email', values.guest_email)
       if (isGuest && values.guest_phone) formData.append('guest_phone', values.guest_phone)
+      if (isGuest && values.guest_city) formData.append('guest_city', values.guest_city)
+      if (isGuest && values.guest_state) formData.append('guest_state', values.guest_state)
+      if (isGuest && values.guest_country) formData.append('guest_country', values.guest_country)
+      if (isWalkin) formData.append('is_walkin', 'true')
 
       const result = await createAppointment(formData)
       
@@ -291,6 +300,65 @@ export function BookingForm({
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 col-span-full">
+              <FormField
+                control={form.control}
+                name="guest_city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City/Town/Village *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="City" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="guest_state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>State *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="State" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="guest_country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="United States">United States</SelectItem>
+                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                        <SelectItem value="Australia">Australia</SelectItem>
+                        <SelectItem value="India">India</SelectItem>
+                        <SelectItem value="Germany">Germany</SelectItem>
+                        <SelectItem value="France">France</SelectItem>
+                        <SelectItem value="Japan">Japan</SelectItem>
+                        <SelectItem value="Brazil">Brazil</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
         )}
 

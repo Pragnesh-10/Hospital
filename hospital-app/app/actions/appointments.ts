@@ -14,6 +14,9 @@ const bookAppointmentSchema = z.object({
   guest_name: z.string().optional(),
   guest_email: z.string().email("Invalid email").optional().or(z.literal("")),
   guest_phone: z.string().optional(),
+  guest_city: z.string().optional(),
+  guest_state: z.string().optional(),
+  guest_country: z.string().optional(),
 })
 
 export async function createAppointment(formData: FormData) {
@@ -22,30 +25,43 @@ export async function createAppointment(formData: FormData) {
   // Get user if logged in
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Validate the data
+  // Validate the data, mapping null to undefined to satisfy Zod's optional()
   const validatedFields = bookAppointmentSchema.safeParse({
-    doctor_id: formData.get('doctor_id'),
-    appointment_date: formData.get('appointment_date'),
-    appointment_time: formData.get('appointment_time'),
-    reason: formData.get('reason'),
-    guest_name: formData.get('guest_name'),
-    guest_email: formData.get('guest_email'),
-    guest_phone: formData.get('guest_phone'),
+    doctor_id: formData.get('doctor_id') ?? undefined,
+    appointment_date: formData.get('appointment_date') ?? undefined,
+    appointment_time: formData.get('appointment_time') ?? undefined,
+    reason: formData.get('reason') ?? undefined,
+    guest_name: formData.get('guest_name') ?? undefined,
+    guest_email: formData.get('guest_email') ?? undefined,
+    guest_phone: formData.get('guest_phone') ?? undefined,
+    guest_city: formData.get('guest_city') ?? undefined,
+    guest_state: formData.get('guest_state') ?? undefined,
+    guest_country: formData.get('guest_country') ?? undefined,
   })
 
   // Return early if the form data is invalid
   if (!validatedFields.success) {
+    console.error("Validation Error:", validatedFields.error.flatten().fieldErrors)
     return {
       error: "Invalid form data. Please check your inputs.",
+      details: validatedFields.error.flatten().fieldErrors,
     }
   }
 
-  const { doctor_id, appointment_date, appointment_time, reason, guest_name, guest_email, guest_phone } = validatedFields.data
+  const { doctor_id, appointment_date, appointment_time, reason, guest_name, guest_email, guest_phone, guest_city, guest_state, guest_country } = validatedFields.data
 
-  // Basic check: if not logged in, guest name and phone are required
-  if (!user && (!guest_name || !guest_phone)) {
+  const is_walkin = formData.get('is_walkin') === 'true'
+
+  // Basic check: if not logged in (and not a staff member booking a walk-in), guest info is required
+  if (!user && (!guest_name || !guest_phone || !guest_city || !guest_state || !guest_country)) {
     return {
-      error: "Guest name and phone number are required for booking.",
+      error: "Guest name, phone number, and location details are required for booking.",
+    }
+  }
+  
+  if (is_walkin && (!guest_name || !guest_phone || !guest_city || !guest_state || !guest_country)) {
+    return {
+      error: "Guest name, phone number, and location details are required for walk-in booking.",
     }
   }
 
@@ -91,7 +107,7 @@ export async function createAppointment(formData: FormData) {
   const { error } = await supabase
     .from('appointments')
     .insert({
-      patient_id: user ? user.id : null,
+      patient_id: (!is_walkin && user) ? user.id : null,
       doctor_id,
       appointment_date,
       appointment_time,
@@ -99,6 +115,9 @@ export async function createAppointment(formData: FormData) {
       guest_name,
       guest_email,
       guest_phone,
+      guest_city,
+      guest_state,
+      guest_country,
       status: 'pending'
     })
 
@@ -109,9 +128,12 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
-  if (user) {
+  if (user && !is_walkin) {
     revalidatePath('/patient', 'layout')
     redirect('/patient?success=Appointment+booked+successfully')
+  } else if (is_walkin) {
+    revalidatePath('/staff', 'layout')
+    redirect('/staff?success=Walk-in+appointment+booked')
   } else {
     // If guest, redirect back to doctors page with success message
     redirect('/doctors?success=Appointment+booked+successfully')

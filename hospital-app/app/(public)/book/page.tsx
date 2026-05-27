@@ -27,6 +27,8 @@ export default async function BookAppointmentPage({
     .select('*')
     .gte('end_date', new Date().toISOString().split('T')[0]) // Only fetch current/future leaves
 
+  const isWalkin = params?.walkin === 'true'
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="space-y-2">
@@ -45,8 +47,9 @@ export default async function BookAppointmentPage({
           <BookingForm 
             doctors={doctors} 
             defaultDoctorId={defaultDoctorId} 
-            isGuest={!user} 
+            isGuest={!user || isWalkin} 
             leaves={dbLeaves || []} 
+            isWalkin={isWalkin}
           />
         </CardContent>
       </Card>

@@ -39,7 +39,7 @@ export default async function StaffDashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 justify-end items-start sm:items-center">
-        <Link href="/book">
+        <Link href="/book?walkin=true">
           <Button>Register Walk-in Patient</Button>
         </Link>
       </div>
