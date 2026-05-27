@@ -8,22 +8,10 @@ import { AddDoctorModal } from './AddDoctorModal'
 export default async function ManageDoctorsPage() {
   const { adminClient } = await requireAdmin()
 
-  // Fetch doctors and profiles manually using the admin client to ensure we bypass RLS issues
-  const { data: dbDoctors } = await adminClient
+  // Fetch doctors and profiles using a single joined query now that the FK exists
+  const { data: doctors } = await adminClient
     .from('doctors')
-    .select('*')
-
-  const { data: dbProfiles } = await adminClient
-    .from('profiles')
-    .select('id, first_name, last_name, phone, avatar_url')
-
-  const doctors = (dbDoctors || []).map(doc => {
-    const profile = (dbProfiles || []).find(p => p.id === doc.id)
-    return {
-      ...doc,
-      profiles: profile || null
-    }
-  })
+    .select('*, profiles(id, first_name, last_name, phone, avatar_url)')
 
   return (
     <div className="space-y-6">

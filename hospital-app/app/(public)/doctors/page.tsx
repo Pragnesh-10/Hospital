@@ -8,23 +8,10 @@ import { createClient } from '@/lib/supabase/server'
 export default async function DoctorsPage() {
   const supabase = await createClient()
 
-  // Fetch doctors and join with profiles manually
-  // Intentionally fetches all doctors; inactive shown as unavailable
-  const { data: dbDoctors, error: docError } = await supabase
+  // Fetch doctors and join with profiles automatically using the newly added Foreign Key
+  const { data: doctors, error: docError } = await supabase
     .from('doctors')
-    .select('*')
-    
-  const { data: dbProfiles } = await supabase
-    .from('profiles')
-    .select('*')
-
-  const doctors = (!docError && dbDoctors) ? dbDoctors.map(doc => {
-    const profile = (dbProfiles || []).find(p => p.id === doc.id)
-    return {
-      ...doc,
-      profiles: profile || null
-    }
-  }) : []
+    .select('*, profiles(*)')
 
   return (
     <div className="container py-20 px-4 md:px-6">
