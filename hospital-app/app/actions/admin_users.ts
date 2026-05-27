@@ -64,28 +64,28 @@ export async function provisionAccount(formData: FormData) {
 
     if (roleError) throw new Error(`Role Error: ${roleError.message}`)
 
-    // 5. Create their profile
-    const { error: profileError } = await adminAuthClient
-      .from('profiles')
-      .upsert({
-        id: newUserId,
-        first_name: firstName,
-        last_name: lastName
-      })
+    // 5 & 6. Create their profile and doctor record concurrently (both only depend on users table FK)
+    const profilePromise = adminAuthClient.from('profiles').upsert({
+      id: newUserId,
+      first_name: firstName,
+      last_name: lastName
+    })
 
-    if (profileError) throw new Error(`Profile Error: ${profileError.message}`)
-
-    // 6. If doctor, create their doctor record
-    if (role === 'doctor') {
-      const { error: docError } = await adminAuthClient
-        .from('doctors')
-        .upsert({
+    const doctorPromise = role === 'doctor' 
+      ? adminAuthClient.from('doctors').upsert({
           id: newUserId,
           specialization: specialization || '',
           is_active: true
         })
-      if (docError) throw new Error(`Doctor DB Error: ${docError.message}`)
-    }
+      : Promise.resolve({ error: null })
+
+    const [ { error: profileError }, { error: docError } ] = await Promise.all([
+      profilePromise,
+      doctorPromise
+    ])
+
+    if (profileError) throw new Error(`Profile Error: ${profileError.message}`)
+    if (docError) throw new Error(`Doctor DB Error: ${docError.message}`)
 
     revalidatePath('/admin/users')
     revalidatePath('/admin/doctors')

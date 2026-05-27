@@ -14,38 +14,35 @@ export default async function DoctorDashboardPage() {
 
   if (!user) redirect('/login')
 
-  const { data: dbAppointments } = await supabase
-    .from('appointments')
-    .select('*')
-    .eq('doctor_id', user.id)
-    .order('appointment_date', { ascending: true })
+  // Fetch all necessary data concurrently, utilizing SQL joins for profiles
+  const [
+    { data: dbAppointments },
+    { data: doctorLeaves },
+    { data: doctorData }
+  ] = await Promise.all([
+    supabase
+      .from('appointments')
+      .select('*, profiles(id, first_name, last_name)')
+      .eq('doctor_id', user.id)
+      .order('appointment_date', { ascending: true }),
+      
+    supabase
+      .from('doctor_leaves')
+      .select('*')
+      .eq('doctor_id', user.id)
+      .order('start_date', { ascending: true }),
+      
+    supabase
+      .from('doctors')
+      .select('is_active')
+      .eq('id', user.id)
+      .single()
+  ])
 
-  const { data: dbProfiles } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name')
-
-  const { data: doctorLeaves } = await supabase
-    .from('doctor_leaves')
-    .select('*')
-    .eq('doctor_id', user.id)
-    .order('start_date', { ascending: true })
-
-  const appointments = (dbAppointments || []).map(appt => {
-    const profile = (dbProfiles || []).find(p => p.id === appt.patient_id)
-    return {
-      ...appt,
-      profiles: profile || null
-    }
-  })
+  const appointments = dbAppointments || []
 
   const today = new Date().toISOString().split('T')[0]
   const todayAppointments = appointments.filter(a => a.appointment_date === today)
-
-  const { data: doctorData } = await supabase
-    .from('doctors')
-    .select('is_active')
-    .eq('id', user.id)
-    .single()
 
   return (
     <div className="space-y-6">

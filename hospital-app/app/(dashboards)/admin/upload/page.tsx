@@ -5,23 +5,16 @@ import { AdminUploadForm } from './AdminUploadForm'
 export default async function AdminUploadPage() {
   const { adminClient } = await requireAdmin()
 
-  // Fetch doctors and profiles manually since PostgREST misses the direct FK
-  // Use adminClient to bypass RLS policies
-  const { data: dbDoctors } = await adminClient.from('doctors').select('id')
-  const { data: dbProfiles } = await adminClient.from('profiles').select('id, first_name, last_name')
-  
-  const doctors = (dbDoctors || []).map(doc => {
-    const profile = (dbProfiles || []).find(p => p.id === doc.id)
-    return {
-      id: doc.id,
-      profiles: profile || null
-    }
-  })
+  // Fetch all required data concurrently and utilize SQL joins to avoid manual mapping
+  const [
+    { data: dbDoctors },
+    { data: facilities }
+  ] = await Promise.all([
+    adminClient.from('doctors').select('id, profiles(id, first_name, last_name)'),
+    adminClient.from('facilities').select('id, title')
+  ])
 
-  // Fetch facilities using adminClient
-  const { data: facilities } = await adminClient
-    .from('facilities')
-    .select('id, title')
+  const doctors = dbDoctors || []
 
   return (
     <div className="space-y-6">

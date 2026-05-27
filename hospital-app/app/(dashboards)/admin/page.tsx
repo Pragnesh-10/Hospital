@@ -9,16 +9,22 @@ import { format, subDays } from 'date-fns'
 export default async function AdminDashboardPage() {
   const { adminClient } = await requireAdmin()
 
-  // Fetch live aggregations using adminClient to bypass RLS policies
-  const { count: patientsCount } = await adminClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'patient')
-  const { count: doctorsCount } = await adminClient.from('doctors').select('*', { count: 'exact', head: true }).eq('is_active', true)
-  const { count: appointmentsCount } = await adminClient.from('appointments').select('*', { count: 'exact', head: true })
-  
   const todayDate = format(new Date(), 'yyyy-MM-dd')
-  const { count: todayCount } = await adminClient.from('appointments').select('*', { count: 'exact', head: true }).eq('appointment_date', todayDate)
 
-  // Fetch all appointments for chart data
-  const { data: allAppointments } = await adminClient.from('appointments').select('appointment_date')
+  // Fetch all live aggregations concurrently to eliminate data fetching waterfalls
+  const [
+    { count: patientsCount },
+    { count: doctorsCount },
+    { count: appointmentsCount },
+    { count: todayCount },
+    { data: allAppointments }
+  ] = await Promise.all([
+    adminClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'patient'),
+    adminClient.from('doctors').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    adminClient.from('appointments').select('*', { count: 'exact', head: true }),
+    adminClient.from('appointments').select('*', { count: 'exact', head: true }).eq('appointment_date', todayDate),
+    adminClient.from('appointments').select('appointment_date')
+  ])
   
   // Calculate chart data for the last 7 days
   const last7Days = Array.from({ length: 7 }).map((_, i) => {

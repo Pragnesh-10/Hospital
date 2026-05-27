@@ -13,25 +13,29 @@ export default async function StaffDashboardPage() {
   
   const todayDate = format(new Date(), 'yyyy-MM-dd')
   
-  // Fetch today's appointments
-  const { data: todayAppointments } = await supabase
-    .from('appointments')
-    .select('*, doctors(profiles(last_name)), profiles!patient_id(first_name, last_name)')
-    .eq('appointment_date', todayDate)
-    .order('appointment_time', { ascending: true })
-
-  // Fetch recent patients
-  const { data: recentPatients } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(5)
-
-  // Fetch active doctors count
-  const { count: activeDoctorsCount } = await supabase
-    .from('doctors')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_active', true)
+  // Fetch all dashboard data concurrently
+  const [
+    { data: todayAppointments },
+    { data: recentPatients },
+    { count: activeDoctorsCount }
+  ] = await Promise.all([
+    supabase
+      .from('appointments')
+      .select('*, doctors(profiles(last_name)), profiles!patient_id(first_name, last_name)')
+      .eq('appointment_date', todayDate)
+      .order('appointment_time', { ascending: true }),
+      
+    supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5),
+      
+    supabase
+      .from('doctors')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+  ])
 
   return (
     <div className="space-y-6">
