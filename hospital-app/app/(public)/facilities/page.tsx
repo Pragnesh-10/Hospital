@@ -1,8 +1,11 @@
 import { Card, CardContent } from '@/components/ui/card'
 import * as Icons from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createStaticClient } from '@/lib/supabase/static'
 
 // Fallback mock data in case the database isn't initialized yet
+// Opt-in to ISR: Revalidate the data every 1 hour (3600 seconds)
+export const revalidate = 3600
+
 const MOCK_FACILITIES = [
   {
     id: '1',
@@ -31,7 +34,7 @@ const MOCK_FACILITIES = [
 ]
 
 export default async function FacilitiesPage() {
-  const supabase = await createClient()
+  const supabase = createStaticClient()
   
   // Try to fetch facilities from the database
   const { data: dbFacilities, error } = await supabase

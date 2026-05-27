@@ -3,10 +3,13 @@ import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createStaticClient } from '@/lib/supabase/static'
+
+// Opt-in to ISR: Revalidate the data every 1 hour (3600 seconds)
+export const revalidate = 3600
 
 export default async function DoctorsPage() {
-  const supabase = await createClient()
+  const supabase = createStaticClient()
 
   // Fetch doctors and join with profiles automatically using the newly added Foreign Key
   const { data, error: docError } = await supabase
