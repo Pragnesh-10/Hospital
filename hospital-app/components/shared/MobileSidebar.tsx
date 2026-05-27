@@ -6,6 +6,7 @@ import { Menu, Activity, LayoutDashboard, Calendar, Users, FileText, Settings, L
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { signout } from '@/app/actions/auth'
 
 const getLinks = (role: string) => {
   if (role === 'admin') return [
@@ -74,7 +75,7 @@ export function MobileSidebar({ role }: { role: string }) {
           </nav>
         </div>
         <div className="p-4 border-t mt-auto">
-          <form action="/auth/signout" method="POST">
+          <form action={signout}>
             <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" type="submit">
               <LogOut className="mr-2 h-4 w-4" />
               Logout

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Activity, Menu } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
+import { signout } from '@/app/actions/auth'
 
 export function Navbar({ user, role }: { user: any; role: string | null }) {
   const getDashboardUrl = (role: string | null) => {
@@ -62,7 +63,7 @@ export function Navbar({ user, role }: { user: any; role: string | null }) {
                 <Link href={dashboardUrl}>
                   <Button variant="outline">Dashboard</Button>
                 </Link>
-                <form action="/auth/signout" method="POST" className="inline">
+                <form action={signout} className="inline">
                   <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" type="submit">Log out</Button>
                 </form>
               </>
@@ -98,7 +99,7 @@ export function Navbar({ user, role }: { user: any; role: string | null }) {
                       <Link href={dashboardUrl} className="w-full">
                         <Button variant="outline" className="w-full">Dashboard</Button>
                       </Link>
-                      <form action="/auth/signout" method="POST" className="w-full">
+                      <form action={signout} className="w-full">
                         <Button variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10" type="submit">Log out</Button>
                       </form>
                     </>

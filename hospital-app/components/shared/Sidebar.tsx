@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Activity, LayoutDashboard, Calendar, Users, FileText, Settings, LogOut, Upload, ShieldPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { signout } from '@/app/actions/auth'
 
 // A simple mock sidebar based on role. In a real app, this is dynamic.
 const getLinks = (role: string) => {
@@ -54,7 +55,7 @@ export function Sidebar({ role }: { role: string }) {
         </nav>
       </div>
       <div className="p-4 border-t mt-auto">
-        <form action="/auth/signout" method="POST">
+        <form action={signout}>
           <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" type="submit">
             <LogOut className="mr-2 h-4 w-4" />
             Logout
