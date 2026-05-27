@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/auth/verifyAdmin'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DoctorToggleAction } from './DoctorToggleAction'
 import { AddDoctorModal } from './AddDoctorModal'
 import { EditFeeModal } from './EditFeeModal'
@@ -47,8 +48,14 @@ export default async function ManageDoctorsPage() {
             <TableBody>
               {doctors && doctors.length > 0 ? doctors.map((doc) => (
                 <TableRow key={doc.id}>
-                  <TableCell className="font-medium">
-                    Dr. {doc.profiles?.first_name} {doc.profiles?.last_name}
+                  <TableCell className="font-medium flex items-center gap-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={doc.profiles?.avatar_url || ''} alt={`${doc.profiles?.first_name} ${doc.profiles?.last_name}`} />
+                      <AvatarFallback className="text-xs">
+                        {`${doc.profiles?.first_name?.[0] || ''}${doc.profiles?.last_name?.[0] || ''}`}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>Dr. {doc.profiles?.first_name} {doc.profiles?.last_name}</span>
                   </TableCell>
                   <TableCell>{doc.specialization}</TableCell>
                   <TableCell>{doc.experience_years} years</TableCell>

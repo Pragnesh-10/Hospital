@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +17,7 @@ type Entity = {
 
 export function AdminUploadForm({ type, entities }: { type: 'doctor' | 'facility', entities: Entity[] }) {
   const [isUploading, setIsUploading] = useState(false)
+  const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -35,6 +37,7 @@ export function AdminUploadForm({ type, entities }: { type: 'doctor' | 'facility
     } else {
       toast.success("Image uploaded successfully!")
       ;(e.target as HTMLFormElement).reset()
+      router.refresh()
     }
     
     setIsUploading(false)

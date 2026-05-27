@@ -3,33 +3,36 @@ import * as Icons from 'lucide-react'
 import { createStaticClient } from '@/lib/supabase/static'
 
 // Fallback mock data in case the database isn't initialized yet
-// Opt-in to ISR: Revalidate the data every 1 hour (3600 seconds)
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 const MOCK_FACILITIES = [
   {
     id: '1',
     title: 'Modern ICU',
     description: 'State-of-the-art Intensive Care Unit equipped with the latest life-support systems.',
-    icon_name: 'Activity'
+    icon_name: 'Activity',
+    image_url: null
   },
   {
     id: '2',
     title: 'Advanced Laboratory',
     description: 'Fully automated pathology and diagnostic lab with rapid reporting capabilities.',
-    icon_name: 'Beaker'
+    icon_name: 'Beaker',
+    image_url: null
   },
   {
     id: '3',
     title: '24/7 Pharmacy',
     description: 'Round-the-clock pharmacy service stocking all essential and specialized medications.',
-    icon_name: 'Cross'
+    icon_name: 'Cross',
+    image_url: null
   },
   {
     id: '4',
     title: 'Cardiology Center',
     description: 'Dedicated center for heart health with modern ECG, Echo, and TMT facilities.',
-    icon_name: 'HeartPulse'
+    icon_name: 'HeartPulse',
+    image_url: null
   }
 ]
 
@@ -61,17 +64,35 @@ export default async function FacilitiesPage() {
           // Dynamically resolve the icon from lucide-react
           // @ts-ignore
           const Icon = Icons[facility.icon_name || 'Activity'] || Icons.Activity
+          const hasImage = !!facility.image_url
 
           return (
-            <Card key={facility.id} className="border-none shadow-sm hover:shadow-md transition-shadow bg-muted/30">
-              <CardContent className="p-8">
-                <div className="p-3 bg-primary/10 w-fit rounded-xl mb-6">
-                  <Icon className="h-8 w-8 text-primary" />
+            <Card key={facility.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 bg-muted/30 group flex flex-col">
+              {hasImage ? (
+                <div className="relative aspect-video w-full overflow-hidden bg-muted border-b">
+                  <img 
+                    src={facility.image_url!} 
+                    alt={facility.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-4 right-4 p-2.5 bg-background/90 backdrop-blur-sm rounded-xl shadow-md border">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold mb-3">{facility.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {facility.description}
-                </p>
+              ) : (
+                <div className="p-8 pb-0">
+                  <div className="p-3 bg-primary/10 w-fit rounded-xl">
+                    <Icon className="h-8 w-8 text-primary" />
+                  </div>
+                </div>
+              )}
+              <CardContent className="p-8 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-bold mb-3">{facility.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-sm">
+                    {facility.description}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           )

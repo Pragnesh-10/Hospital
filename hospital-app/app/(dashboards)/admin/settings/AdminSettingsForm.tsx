@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
@@ -28,6 +29,7 @@ export function AdminSettingsForm({
   const [hospitalPhoto, setHospitalPhoto] = useState(initialSettings.hospital_hero_image)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   const handleToggle = (key: string, currentValue: boolean, setter: (val: boolean) => void) => {
     const newValue = !currentValue
@@ -40,6 +42,7 @@ export function AdminSettingsForm({
         setter(currentValue) // revert
       } else {
         toast.success(`System preference updated successfully!`)
+        router.refresh()
       }
     })
   }
@@ -62,6 +65,7 @@ export function AdminSettingsForm({
         toast.success('Hospital photo updated successfully!')
         setHospitalPhoto(res.url)
         ;(e.target as HTMLFormElement).reset()
+        router.refresh()
       }
     } catch (err: any) {
       toast.error(err.message || 'Failed to upload photo')

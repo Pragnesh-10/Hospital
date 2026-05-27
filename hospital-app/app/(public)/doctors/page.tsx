@@ -5,8 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Link from 'next/link'
 import { createStaticClient } from '@/lib/supabase/static'
 
-// Opt-in to ISR: Revalidate the data every 1 hour (3600 seconds)
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export default async function DoctorsPage() {
   const supabase = createStaticClient()
