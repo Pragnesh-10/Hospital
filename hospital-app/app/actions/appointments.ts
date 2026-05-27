@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { z } from 'zod'
 
 // Define the schema for booking an appointment
@@ -74,8 +75,10 @@ export async function createAppointment(formData: FormData) {
   // Construct the full appointment datetime
   const appointmentDateTime = new Date(`${appointment_date}T${appointment_time}:00`)
 
+  const supabaseAdmin = createAdminClient()
+
   // Check if the doctor is on leave for the requested date/time
-  const { data: leaves } = await supabase
+  const { data: leaves } = await supabaseAdmin
     .from('doctor_leaves')
     .select('*')
     .eq('doctor_id', doctor_id)
@@ -95,7 +98,7 @@ export async function createAppointment(formData: FormData) {
   }
 
   // Prevent Double Booking: Check if the doctor already has an appointment at this exact date and time
-  const { data: existingAppointments } = await supabase
+  const { data: existingAppointments } = await supabaseAdmin
     .from('appointments')
     .select('id')
     .eq('doctor_id', doctor_id)
@@ -109,8 +112,8 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
-  // Insert into database
-  const { data: newAppt, error } = await supabase
+  // Insert into database using admin client to bypass RLS select policies for unauthenticated guest sessions
+  const { data: newAppt, error } = await supabaseAdmin
     .from('appointments')
     .insert({
       patient_id: (!is_walkin && user) ? user.id : null,
