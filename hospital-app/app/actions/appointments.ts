@@ -11,6 +11,8 @@ const bookAppointmentSchema = z.object({
   appointment_date: z.string(),
   appointment_time: z.string().min(1, "Please select a time slot"),
   reason: z.string().optional(),
+  patient_dob: z.string().optional().or(z.literal("")),
+  patient_age: z.string().min(1, "Age is required"),
   guest_name: z.string().optional(),
   guest_email: z.string().email("Invalid email").optional().or(z.literal("")),
   guest_phone: z.string().optional(),
@@ -31,6 +33,8 @@ export async function createAppointment(formData: FormData) {
     appointment_date: formData.get('appointment_date') ?? undefined,
     appointment_time: formData.get('appointment_time') ?? undefined,
     reason: formData.get('reason') ?? undefined,
+    patient_dob: formData.get('patient_dob') ?? undefined,
+    patient_age: formData.get('patient_age') ?? undefined,
     guest_name: formData.get('guest_name') ?? undefined,
     guest_email: formData.get('guest_email') ?? undefined,
     guest_phone: formData.get('guest_phone') ?? undefined,
@@ -48,7 +52,7 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
-  const { doctor_id, appointment_date, appointment_time, reason, guest_name, guest_email, guest_phone, guest_city, guest_state, guest_country } = validatedFields.data
+  const { doctor_id, appointment_date, appointment_time, reason, patient_dob, patient_age, guest_name, guest_email, guest_phone, guest_city, guest_state, guest_country } = validatedFields.data
 
   const is_walkin = formData.get('is_walkin') === 'true'
 
@@ -112,6 +116,8 @@ export async function createAppointment(formData: FormData) {
       appointment_date,
       appointment_time,
       reason,
+      patient_dob: patient_dob || null,
+      patient_age: parseInt(patient_age, 10),
       guest_name,
       guest_email,
       guest_phone,

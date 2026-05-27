@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -42,6 +42,8 @@ const formSchema = z.object({
   appointment_date: z.date(),
   appointment_time: z.string().min(1, "Please select a time."),
   reason: z.string().optional(),
+  patient_dob: z.string().optional().or(z.literal("")),
+  patient_age: z.string().min(1, "Age is required."),
   guest_name: z.string().optional(),
   guest_phone: z.string().optional(),
   guest_email: z.string().email("Invalid email").optional().or(z.literal("")),
@@ -77,6 +79,8 @@ export function BookingForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       doctor_id: defaultDoctorId || "",
+      patient_dob: "",
+      patient_age: "",
     },
   })
 
@@ -85,6 +89,24 @@ export function BookingForm({
   const selectedDoctorId = form.watch("doctor_id")
    
   const selectedDate = form.watch("appointment_date")
+  const watchedDob = form.watch("patient_dob")
+
+  useEffect(() => {
+    if (watchedDob) {
+      const birthDate = new Date(watchedDob)
+      if (!isNaN(birthDate.getTime())) {
+        const today = new Date()
+        let age = today.getFullYear() - birthDate.getFullYear()
+        const monthDiff = today.getMonth() - birthDate.getMonth()
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--
+        }
+        if (age >= 0) {
+          form.setValue("patient_age", age.toString())
+        }
+      }
+    }
+  }, [watchedDob, form])
 
   // Generate some dummy time slots and filter them based on leaves
   const allTimeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00"]
@@ -123,6 +145,8 @@ export function BookingForm({
       formData.append('appointment_date', format(values.appointment_date, 'yyyy-MM-dd'))
       formData.append('appointment_time', values.appointment_time)
       if (values.reason) formData.append('reason', values.reason)
+      if (values.patient_dob) formData.append('patient_dob', values.patient_dob)
+      if (values.patient_age) formData.append('patient_age', values.patient_age)
       if (isGuest && values.guest_name) formData.append('guest_name', values.guest_name)
       if (isGuest && values.guest_email) formData.append('guest_email', values.guest_email)
       if (isGuest && values.guest_phone) formData.append('guest_phone', values.guest_phone)
@@ -375,6 +399,36 @@ export function BookingForm({
             </div>
           </div>
         )}
+
+        <div className="grid sm:grid-cols-2 gap-4 border p-4 rounded-lg bg-muted/20">
+          <FormField
+            control={form.control}
+            name="patient_dob"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of Birth (Optional)</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} value={field.value || ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="patient_age"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Age *</FormLabel>
+                <FormControl>
+                  <Input type="number" min="0" max="120" placeholder="Enter age" {...field} value={field.value || ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

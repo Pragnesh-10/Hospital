@@ -180,7 +180,12 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
                     <td className="px-4 py-3 align-middle">
                       <div className="flex items-center gap-2">
                         {appt.appointment_number && <span className="text-primary font-mono text-xs font-bold bg-primary/10 px-1.5 py-0.5 rounded">{appt.appointment_number}</span>}
-                        <span className="font-medium">{patientName}</span>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{patientName}</span>
+                          <span className="text-xs text-muted-foreground">
+                            Age: {appt.patient_age ?? 'N/A'}{appt.patient_dob ? ` | DOB: ${appt.patient_dob}` : ''}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 align-middle font-medium">

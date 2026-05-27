@@ -21,6 +21,8 @@ type Appointment = {
   appointment_number?: string | null
   medical_notes?: string | null
   profiles?: { first_name: string; last_name: string } | null
+  patient_dob?: string | null
+  patient_age?: number | null
 }
 
 export function DoctorSchedule({ appointments, allAppointments }: { appointments: Appointment[], allAppointments: Appointment[] }) {
@@ -59,9 +61,12 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
         return (
           <div key={appt.id} className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 last:border-0 last:pb-0 gap-4">
             <div>
-              <p className="font-medium">
-                {appt.appointment_number && <span className="text-primary mr-2">{appt.appointment_number}</span>}
-                {patientName}
+              <p className="font-medium flex items-center flex-wrap gap-x-2 gap-y-1">
+                {appt.appointment_number && <span className="text-primary font-mono text-xs font-bold bg-primary/10 px-1.5 py-0.5 rounded">{appt.appointment_number}</span>}
+                <span>{patientName}</span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  (Age: {appt.patient_age ?? 'N/A'}{appt.patient_dob ? `, DOB: ${appt.patient_dob}` : ''})
+                </span>
               </p>
               <p className="text-sm text-muted-foreground capitalize">{appt.status} - {appt.reason || 'No reason provided'}</p>
             </div>
@@ -82,7 +87,12 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                   <DialogHeader>
-                    <DialogTitle>Patient Visit: {patientName}</DialogTitle>
+                    <DialogTitle>
+                      Patient Visit: {patientName}
+                      <span className="text-sm font-normal text-muted-foreground block mt-1">
+                        Age: {appt.patient_age ?? 'N/A'} {appt.patient_dob ? `| Date of Birth: ${appt.patient_dob}` : ''}
+                      </span>
+                    </DialogTitle>
                   </DialogHeader>
                   
                   <ScrollArea className="flex-1 px-1">
