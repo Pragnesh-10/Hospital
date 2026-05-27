@@ -53,6 +53,7 @@ const formSchema = z.object({
 type Doctor = {
   id: string
   specialization: string
+  consultation_fee: number
   profiles: any
 }
 
@@ -176,6 +177,19 @@ export function BookingForm({
             </FormItem>
           )}
         />
+
+        {selectedDoctorId && (() => {
+          const selectedDoctor = doctors.find(d => d.id === selectedDoctorId)
+          if (selectedDoctor?.consultation_fee != null) {
+            return (
+              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30 px-4 py-3">
+                <span className="text-sm text-muted-foreground">Consultation Fee:</span>
+                <span className="text-lg font-bold text-green-600">₹{Number(selectedDoctor.consultation_fee).toLocaleString('en-IN')}</span>
+              </div>
+            )
+          }
+          return null
+        })()}
 
         <div className="grid sm:grid-cols-2 gap-4">
           <FormField

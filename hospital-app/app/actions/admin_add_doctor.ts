@@ -24,6 +24,8 @@ export async function addDoctorAction(formData: FormData) {
   const specialization = formData.get('specialization') as string
   const experienceStr = formData.get('experience') as string
   const experience = parseInt(experienceStr, 10) || 0
+  const consultationFeeStr = formData.get('consultationFee') as string
+  const consultationFee = consultationFeeStr ? parseFloat(consultationFeeStr) : undefined
 
   if (!email || !password || !firstName || !lastName || !specialization) {
     return { error: 'All fields are required.' }
@@ -63,6 +65,7 @@ export async function addDoctorAction(formData: FormData) {
     id: newUserId,
     specialization,
     experience_years: experience,
+    consultation_fee: consultationFee,
     is_active: true
   })
 

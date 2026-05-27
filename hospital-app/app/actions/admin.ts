@@ -30,3 +30,38 @@ export async function toggleDoctorStatus(doctorId: string, currentStatus: boolea
   
   return { success: true }
 }
+
+export async function updateConsultationFee(doctorId: string, formData: FormData) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
+  if (userData?.role !== 'admin') return { error: 'Unauthorized' }
+
+  const feeStr = formData.get('fee') as string
+  const fee = parseFloat(feeStr)
+
+  if (isNaN(fee) || fee < 0) {
+    return { error: 'Please enter a valid fee amount.' }
+  }
+
+  const { error } = await adminClient
+    .from('doctors')
+    .update({ consultation_fee: fee })
+    .eq('id', doctorId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/doctors')
+  revalidatePath('/doctors')
+  revalidatePath('/book')
+
+  return { success: true }
+}
+

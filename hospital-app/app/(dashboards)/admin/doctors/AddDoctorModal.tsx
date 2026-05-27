@@ -83,6 +83,14 @@ export function AddDoctorModal() {
             <Input id="experience" name="experience" type="number" required placeholder="10" min={0} />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="consultationFee">Consultation Fee (₹)</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">₹</span>
+              <Input id="consultationFee" name="consultationFee" type="number" placeholder="500" min={0} step={50} className="pl-7" />
+            </div>
+          </div>
+
           <div className="pt-4 flex justify-end space-x-2">
             <Button variant="outline" type="button" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" disabled={loading}>

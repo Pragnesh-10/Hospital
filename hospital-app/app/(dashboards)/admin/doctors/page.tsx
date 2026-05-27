@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { DoctorToggleAction } from './DoctorToggleAction'
 import { AddDoctorModal } from './AddDoctorModal'
+import { EditFeeModal } from './EditFeeModal'
 
 export default async function ManageDoctorsPage() {
   const { adminClient } = await requireAdmin()
@@ -28,7 +29,7 @@ export default async function ManageDoctorsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Doctor Directory</CardTitle>
-          <CardDescription>A list of all doctors and their current status in the booking system.</CardDescription>
+          <CardDescription>A list of all doctors, their fees, and current status.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -37,6 +38,7 @@ export default async function ManageDoctorsPage() {
                 <TableHead>Doctor Name</TableHead>
                 <TableHead>Specialization</TableHead>
                 <TableHead>Experience</TableHead>
+                <TableHead>Consultation Fee</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -50,6 +52,15 @@ export default async function ManageDoctorsPage() {
                   <TableCell>{doc.specialization}</TableCell>
                   <TableCell>{doc.experience_years} years</TableCell>
                   <TableCell>
+                    {doc.consultation_fee != null ? (
+                      <span className="font-semibold text-green-600">
+                        ₹{Number(doc.consultation_fee).toLocaleString('en-IN')}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">Not set</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     {doc.is_active ? (
                       <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">Active</Badge>
                     ) : (
@@ -57,12 +68,19 @@ export default async function ManageDoctorsPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <DoctorToggleAction doctorId={doc.id} isActive={doc.is_active} />
+                    <div className="flex justify-end gap-2">
+                      <EditFeeModal
+                        doctorId={doc.id}
+                        currentFee={doc.consultation_fee ?? 0}
+                        doctorName={`Dr. ${doc.profiles?.first_name} ${doc.profiles?.last_name}`}
+                      />
+                      <DoctorToggleAction doctorId={doc.id} isActive={doc.is_active} />
+                    </div>
                   </TableCell>
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                     No doctors found in the database.
                   </TableCell>
                 </TableRow>
