@@ -110,7 +110,7 @@ export async function createAppointment(formData: FormData) {
   }
 
   // Insert into database
-  const { error } = await supabase
+  const { data: newAppt, error } = await supabase
     .from('appointments')
     .insert({
       patient_id: (!is_walkin && user) ? user.id : null,
@@ -129,6 +129,33 @@ export async function createAppointment(formData: FormData) {
       guest_country,
       status: 'pending'
     })
+    .select(`
+      id,
+      appointment_number,
+      appointment_date,
+      appointment_time,
+      guest_name,
+      guest_phone,
+      guest_address,
+      guest_city,
+      guest_state,
+      guest_country,
+      patient_id,
+      patient_age,
+      patient_dob,
+      profiles:patient_id (
+        first_name,
+        last_name
+      ),
+      doctors (
+        specialization,
+        profiles (
+          first_name,
+          last_name
+        )
+      )
+    `)
+    .single()
 
   if (error) {
     console.error("Booking Error:", error)
@@ -140,14 +167,10 @@ export async function createAppointment(formData: FormData) {
   // Revalidate all dashboards so the new appointment appears immediately
   revalidatePath('/doctor', 'layout')
   revalidatePath('/staff', 'layout')
+  revalidatePath('/patient', 'layout')
 
-  if (user && !is_walkin) {
-    revalidatePath('/patient', 'layout')
-    redirect('/patient?success=Appointment+booked+successfully')
-  } else if (is_walkin) {
-    redirect('/staff?success=Walk-in+appointment+booked')
-  } else {
-    // If guest, redirect back to doctors page with success message
-    redirect('/doctors?success=Appointment+booked+successfully')
+  return {
+    success: true,
+    appointment: newAppt,
   }
 }

@@ -6,7 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { format } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
+import { CalendarIcon, CheckCircle, Printer } from 'lucide-react'
+import { PrintSlip } from '@/components/staff/PrintSlip'
+import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -61,6 +63,7 @@ export function BookingForm({
 }) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [bookedAppointment, setBookedAppointment] = useState<any>(null)
 
   const dynamicFormSchema = useMemo(() => {
     return z.object({
@@ -172,7 +175,8 @@ export function BookingForm({
       
       if (result?.error) {
         toast.error(result.error)
-      } else {
+      } else if (result?.success) {
+        setBookedAppointment(result.appointment)
         toast.success("Appointment booked successfully!")
       }
     } catch {
@@ -180,6 +184,140 @@ export function BookingForm({
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (bookedAppointment) {
+    const patientName = bookedAppointment.profiles 
+      ? `${bookedAppointment.profiles.first_name} ${bookedAppointment.profiles.last_name}` 
+      : bookedAppointment.guest_name || 'Guest'
+
+    const doctorName = bookedAppointment.doctors?.profiles 
+      ? `Dr. ${bookedAppointment.doctors.profiles.first_name} ${bookedAppointment.doctors.profiles.last_name}` 
+      : 'Unknown Doctor'
+    const department = bookedAppointment.doctors?.specialization || 'General'
+
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="text-center py-6">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/30">
+            <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+          </div>
+          <h2 className="mt-4 text-2xl font-bold text-foreground">Appointment Confirmed!</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your appointment has been successfully scheduled. Please find your booking receipt details below.
+          </p>
+        </div>
+
+        {/* On-Screen Receipt Card */}
+        <div className="rounded-xl border bg-card text-card-foreground shadow-md overflow-hidden max-w-md mx-auto">
+          <div className="bg-primary/5 px-6 py-4 border-b flex justify-between items-center">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Token Number</p>
+              <p className="text-xl font-mono font-bold text-primary">{bookedAppointment.appointment_number || 'Pending'}</p>
+            </div>
+            <div className="text-right">
+              <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-semibold text-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-400">
+                Pending Confirmation
+              </span>
+            </div>
+          </div>
+          
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm border-b pb-4">
+              <div>
+                <p className="text-muted-foreground font-medium">Patient Name</p>
+                <p className="font-semibold text-foreground">{patientName}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground font-medium">Age / DOB</p>
+                <p className="font-semibold text-foreground">
+                  {bookedAppointment.patient_age} yrs
+                  {bookedAppointment.patient_dob ? ` (${format(new Date(bookedAppointment.patient_dob), 'dd/MM/yyyy')})` : ''}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm border-b pb-4">
+              <div>
+                <p className="text-muted-foreground font-medium">Doctor</p>
+                <p className="font-semibold text-foreground">{doctorName}</p>
+                <p className="text-xs text-muted-foreground">{department}</p>
+              </div>
+              {bookedAppointment.doctors?.consultation_fee != null && (
+                <div>
+                  <p className="text-muted-foreground font-medium">Consultation Fee</p>
+                  <p className="font-semibold text-foreground">₹{bookedAppointment.doctors.consultation_fee}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm border-b pb-4">
+              <div>
+                <p className="text-muted-foreground font-medium">Date</p>
+                <p className="font-semibold text-foreground">{format(new Date(bookedAppointment.appointment_date), 'MMMM do, yyyy')}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground font-medium">Time Slot</p>
+                <p className="font-semibold text-foreground">{bookedAppointment.appointment_time}</p>
+              </div>
+            </div>
+
+            {/* Address Details */}
+            {(bookedAppointment.guest_address || bookedAppointment.guest_city) && (
+              <div className="text-sm">
+                <p className="text-muted-foreground font-medium mb-1">Patient Address</p>
+                <p className="font-semibold text-foreground">
+                  {bookedAppointment.guest_address ? `${bookedAppointment.guest_address}, ` : ''}
+                  {bookedAppointment.guest_city ? `${bookedAppointment.guest_city}, ` : ''}
+                  {bookedAppointment.guest_state ? `${bookedAppointment.guest_state}, ` : ''}
+                  {bookedAppointment.guest_country || ''}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+          <Button onClick={() => window.print()} className="flex-1 flex items-center justify-center gap-2">
+            <Printer className="h-4 w-4" /> Print Slip / Receipt
+          </Button>
+          <Button variant="outline" onClick={() => {
+            setBookedAppointment(null)
+            form.reset()
+          }} className="flex-1">
+            Book Another
+          </Button>
+        </div>
+
+        {/* Additional Navigation Links */}
+        <div className="text-center pt-2">
+          {isWalkin ? (
+            <Link href="/staff" className="text-sm text-primary hover:underline font-medium">
+              Go to Staff Dashboard
+            </Link>
+          ) : !isGuest ? (
+            <Link href="/patient" className="text-sm text-primary hover:underline font-medium">
+              Go to Patient Dashboard
+            </Link>
+          ) : (
+            <Link href={`/track?query=${bookedAppointment.appointment_number}`} className="text-sm text-primary hover:underline font-medium">
+              Track this Appointment
+            </Link>
+          )}
+        </div>
+
+        {/* Hidden Printable Receipt component */}
+        <PrintSlip
+          patientName={patientName}
+          token={bookedAppointment.appointment_number}
+          doctorName={doctorName}
+          date={bookedAppointment.appointment_date}
+          time={bookedAppointment.appointment_time}
+          department={department}
+        />
+      </div>
+    )
   }
 
   return (

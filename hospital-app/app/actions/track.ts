@@ -48,14 +48,17 @@ export async function lookupAppointment(formData: FormData) {
   }
 
   const query = parsed.data.query.trim()
+  const cleanQuery = query.replace(/\D/g, '')
   const supabaseAdmin = createAdminClient()
 
   // We search for either the phone number (guest_phone OR profiles.phone) 
   // or the appointment_number
   
-  // Since we cannot do an OR across a joined table easily without raw SQL,
-  // we will do two parallel checks. First check if it's an appointment_number
-  // or guest_phone. If not found, check if it's a registered user's phone.
+  // First query: search appointments by token or guest phone
+  let orCondition = `appointment_number.eq.${query},guest_phone.eq.${query}`
+  if (cleanQuery && cleanQuery.length >= 5) {
+    orCondition += `,guest_phone.eq.${cleanQuery}`
+  }
 
   let { data: appointments, error } = await supabaseAdmin
     .from('appointments')
@@ -80,19 +83,32 @@ export async function lookupAppointment(formData: FormData) {
         phone
       )
     `)
-    .or(`appointment_number.eq.${query},guest_phone.eq.${query}`)
-    .gte('appointment_date', new Date().toISOString().split('T')[0]) // Only today or future
-    .order('appointment_date', { ascending: true })
-    .order('appointment_time', { ascending: true })
+    .or(orCondition)
+    .order('appointment_date', { ascending: false })
+    .order('appointment_time', { ascending: false })
     .limit(1)
 
   // If no guest/token match, try matching by registered patient phone
   if (!appointments || appointments.length === 0) {
-    const { data: patientProfile } = await supabaseAdmin
+    let patientProfile = null
+    const { data: exactProfile } = await supabaseAdmin
       .from('profiles')
       .select('id')
       .eq('phone', query)
-      .single()
+      .maybeSingle()
+
+    if (exactProfile) {
+      patientProfile = exactProfile
+    } else if (cleanQuery && cleanQuery.length >= 5) {
+      const { data: cleanProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('phone', cleanQuery)
+        .maybeSingle()
+      if (cleanProfile) {
+        patientProfile = cleanProfile
+      }
+    }
 
     if (patientProfile) {
       const { data: patientAppointments } = await supabaseAdmin
@@ -119,12 +135,11 @@ export async function lookupAppointment(formData: FormData) {
           )
         `)
         .eq('patient_id', patientProfile.id)
-        .gte('appointment_date', new Date().toISOString().split('T')[0])
-        .order('appointment_date', { ascending: true })
-        .order('appointment_time', { ascending: true })
+        .order('appointment_date', { ascending: false })
+        .order('appointment_time', { ascending: false })
         .limit(1)
         
-      if (patientAppointments) {
+      if (patientAppointments && patientAppointments.length > 0) {
         appointments = patientAppointments
       }
     }
