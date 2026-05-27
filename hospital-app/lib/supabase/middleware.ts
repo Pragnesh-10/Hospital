@@ -15,15 +15,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            // Apply stringent security settings (7 days expiry for auth, Strict SameSite)
-            const strictOptions = {
-              ...options,
-              maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
-              sameSite: 'strict' as const,
-              secure: process.env.NODE_ENV === 'production',
-              httpOnly: true, // Prevents XSS accessing auth cookies
-            }
+          cookiesToSet.forEach(({ name, value, _options }) => {
             request.cookies.set(name, value)
           })
           
@@ -32,14 +24,10 @@ export async function updateSession(request: NextRequest) {
           })
           
           cookiesToSet.forEach(({ name, value, options }) => {
-            const strictOptions = {
+            supabaseResponse.cookies.set(name, value, {
               ...options,
-              maxAge: 7 * 24 * 60 * 60,
-              sameSite: 'strict' as const,
               secure: process.env.NODE_ENV === 'production',
-              httpOnly: true,
-            }
-            supabaseResponse.cookies.set(name, value, strictOptions)
+            })
           })
         },
       },
@@ -54,14 +42,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // DEV MODE ADMIN BYPASS
-  if (process.env.NODE_ENV === 'development' && request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/dev-login'
-      return NextResponse.redirect(url)
-    }
-  }
+
 
   // Protected routes require authentication
   const protectedPrefixes = ['/admin', '/doctor', '/patient', '/staff']

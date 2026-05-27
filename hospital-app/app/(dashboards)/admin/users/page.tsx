@@ -1,19 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ProvisionForm } from './ProvisionForm'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { requireAdmin } from '@/lib/auth/verifyAdmin'
 
 export default async function AdminUsersPage() {
-  const supabase = await createClient()
-  
-  // Verify admin
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { createAdminClient } = await import('@/lib/supabase/admin');
-  const adminClient = createAdminClient();
-  const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
-  if (userData?.role !== 'admin') redirect('/')
+  await requireAdmin()
 
   return (
     <div className="space-y-6">

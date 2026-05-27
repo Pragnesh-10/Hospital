@@ -1,8 +1,11 @@
+// TODO: This feature is not yet implemented. All switches are visual only.
+import { requireAdmin } from '@/lib/auth/verifyAdmin'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 
-export default function AdminSettingsPage() {
+export default async function AdminSettingsPage() {
+  await requireAdmin()
   return (
     <div className="space-y-6">
       <div className="space-y-2">

@@ -9,6 +9,7 @@ export default async function DoctorsPage() {
   const supabase = await createClient()
 
   // Fetch doctors and join with profiles manually
+  // Intentionally fetches all doctors; inactive shown as unavailable
   const { data: dbDoctors, error: docError } = await supabase
     .from('doctors')
     .select('*')

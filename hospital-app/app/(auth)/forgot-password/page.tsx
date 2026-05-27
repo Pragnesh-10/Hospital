@@ -5,10 +5,14 @@ import { Button } from '@/components/ui/button'
 import { resetPassword } from '@/app/actions/reset_auth'
 import Link from 'next/link'
 
-export default async function ForgotPasswordPage({ searchParams }: { searchParams: { message?: string, success?: string } }) {
-  const resolvedParams = await searchParams;
-  const message = resolvedParams?.message;
-  const success = resolvedParams?.success;
+export default async function ForgotPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>
+}) {
+  const params = await searchParams
+  const message = params?.message
+  const success = params?.success
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">

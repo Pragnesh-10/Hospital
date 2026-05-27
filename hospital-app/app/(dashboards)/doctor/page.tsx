@@ -1,3 +1,4 @@
+// TODO: Pending Reports count is a visual stub (hardcoded to 0).
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, Users, ClipboardList } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'

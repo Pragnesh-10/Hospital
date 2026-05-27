@@ -6,11 +6,11 @@ import { revalidatePath } from 'next/cache'
 export async function addDoctorAction(formData: FormData) {
   const supabase = await createClient()
 
-  // 1. Verify admin status using the normal client
+  // 1. Verify user is logged in
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
   
-  // 1. Verify admin status using the Admin Client to bypass RLS
+  // 2. Verify admin status using the Admin Client to bypass RLS
   const { createAdminClient } = await import('@/lib/supabase/admin');
   const adminClient = createAdminClient();
   

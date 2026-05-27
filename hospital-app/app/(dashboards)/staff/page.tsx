@@ -1,3 +1,5 @@
+// TODO: Search bar is not yet functional.
+// TODO: Pending Reports count is a visual stub (hardcoded to 0).
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Search, Activity, FileText, Calendar } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -115,7 +117,7 @@ export default async function StaffDashboardPage() {
                 <div key={patient.id} className="flex flex-col gap-1 border-b pb-4 last:border-0 last:pb-0">
                   <span className="font-medium">{patient.first_name} {patient.last_name}</span>
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>{patient.phone || patient.email || 'No contact provided'}</span>
+                    <span>{patient.phone || 'No contact provided'}</span>
                     <span>{format(new Date(patient.created_at), "MMM d, h:mm a")}</span>
                   </div>
                 </div>

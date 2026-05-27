@@ -25,3 +25,12 @@ SUPABASE_SERVICE_ROLE_KEY="enter url here"
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Dev Admin Setup
+To create an admin user manually, run this SQL in your Supabase SQL editor:
+```sql
+-- Replace the ID with your actual auth.users ID after signing up
+INSERT INTO public.users (id, role) 
+VALUES ('your-auth-user-id-here', 'admin')
+ON CONFLICT (id) DO UPDATE SET role = 'admin';
+```

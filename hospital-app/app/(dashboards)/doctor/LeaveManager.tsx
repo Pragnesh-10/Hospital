@@ -10,6 +10,8 @@ import { addDoctorLeave, deleteDoctorLeave } from '@/app/actions/leaves'
 import { format } from 'date-fns'
 import { Trash2, CalendarOff } from 'lucide-react'
 
+import { useRouter } from 'next/navigation'
+
 type Leave = {
   id: string
   start_date: string
@@ -18,6 +20,7 @@ type Leave = {
 }
 
 export function LeaveManager({ initialLeaves }: { initialLeaves: Leave[] }) {
+  const router = useRouter()
   const [leaves, setLeaves] = useState<Leave[]>(initialLeaves)
   const [loading, setLoading] = useState(false)
 
@@ -42,9 +45,7 @@ export function LeaveManager({ initialLeaves }: { initialLeaves: Leave[] }) {
       toast.error(res.error)
     } else {
       toast.success("Leave scheduled successfully!")
-      // In a real app, the server action revalidates the path which will refresh the server component
-      // But for immediate feedback, we can trigger a hard refresh or wait for the Next.js router to catch up.
-      window.location.reload()
+      router.refresh()
     }
     setLoading(false)
   }
@@ -59,6 +60,7 @@ export function LeaveManager({ initialLeaves }: { initialLeaves: Leave[] }) {
     } else {
       toast.success("Leave cancelled.")
       setLeaves(leaves.filter(l => l.id !== id))
+      router.refresh()
     }
     setLoading(false)
   }

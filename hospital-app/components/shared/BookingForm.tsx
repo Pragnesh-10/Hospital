@@ -75,7 +75,9 @@ export function BookingForm({
   })
 
   // Get currently selected doctor and date
+  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedDoctorId = form.watch("doctor_id")
+   
   const selectedDate = form.watch("appointment_date")
 
   // Generate some dummy time slots and filter them based on leaves
@@ -126,7 +128,7 @@ export function BookingForm({
       } else {
         toast.success("Appointment booked successfully!")
       }
-    } catch (error) {
+    } catch {
       toast.error("Something went wrong. Please try again.")
     } finally {
       setIsSubmitting(false)
@@ -145,7 +147,7 @@ export function BookingForm({
               <FormLabel>Doctor</FormLabel>
               <Select onValueChange={(val) => {
                 field.onChange(val)
-                form.setValue("appointment_date", undefined as any)
+                form.setValue("appointment_date", undefined as unknown as Date)
                 form.setValue("appointment_time", "")
               }} defaultValue={field.value}>
                 <FormControl>

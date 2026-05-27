@@ -11,22 +11,21 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 
 type Appointment = {
   id: string
-  patient_id?: string
-  guest_name?: string
-  guest_phone?: string
+  patient_id?: string | null
+  guest_name?: string | null
+  guest_phone?: string | null
   status: string
-  reason: string
+  reason: string | null
   appointment_time: string
   appointment_date: string
-  appointment_number?: string
-  medical_notes?: string
-  profiles?: { first_name: string; last_name: string }
+  appointment_number?: string | null
+  medical_notes?: string | null
+  profiles?: { first_name: string; last_name: string } | null
 }
 
 export function DoctorSchedule({ appointments, allAppointments }: { appointments: Appointment[], allAppointments: Appointment[] }) {
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [open, setOpen] = useState(false)
 
   async function handleSaveNotes(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -41,7 +40,7 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
       toast.error(res.error)
     } else {
       toast.success('Medical notes saved successfully')
-      setOpen(false)
+      setSelectedAppt(null)
     }
     setIsSaving(false)
   }
@@ -72,12 +71,14 @@ export function DoctorSchedule({ appointments, allAppointments }: { appointments
                 {appt.appointment_time}
               </div>
               
-              <Dialog open={open && selectedAppt?.id === appt.id} onOpenChange={(val) => {
-                setOpen(val)
-                if (val) setSelectedAppt(appt)
+              <Dialog open={selectedAppt?.id === appt.id} onOpenChange={(val) => {
+                if (!val) setSelectedAppt(null)
               }}>
-                <DialogTrigger className={buttonVariants({ variant: "outline", size: "sm" })}>
-                  View / Notes
+                {/* @ts-ignore - Radix UI React 19 type clash */}
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={() => setSelectedAppt(appt)}>
+                    View / Notes
+                  </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                   <DialogHeader>

@@ -1,18 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { requireAdmin } from '@/lib/auth/verifyAdmin'
 import { AdminUploadForm } from './AdminUploadForm'
 
 export default async function AdminUploadPage() {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { createAdminClient } = await import('@/lib/supabase/admin');
-  const adminClient = createAdminClient();
-  const { data: userRole } = await adminClient.from('users').select('role').eq('id', user.id).single();
-  if (userRole?.role !== 'admin') redirect('/login')
+  const { adminClient } = await requireAdmin()
 
   // Fetch doctors and profiles manually since PostgREST misses the direct FK
   // Use adminClient to bypass RLS policies

@@ -8,9 +8,13 @@ import Link from 'next/link'
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
 
-export default async function LoginPage(props: { searchParams: SearchParams }) {
-  const searchParams = await props.searchParams
-  const message = searchParams?.message as string | undefined
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>
+}) {
+  const params = await searchParams
+  const message = params?.message
 
   return (
     <Card className="w-full shadow-lg border-0">

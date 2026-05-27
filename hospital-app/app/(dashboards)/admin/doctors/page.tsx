@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { requireAdmin } from '@/lib/auth/verifyAdmin'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
@@ -7,16 +6,7 @@ import { DoctorToggleAction } from './DoctorToggleAction'
 import { AddDoctorModal } from './AddDoctorModal'
 
 export default async function ManageDoctorsPage() {
-  const supabase = await createClient()
-  
-  // Verify admin
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { createAdminClient } = await import('@/lib/supabase/admin');
-  const adminClient = createAdminClient();
-  const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
-  if (userData?.role !== 'admin') redirect('/')
+  const { adminClient } = await requireAdmin()
 
   // Fetch doctors and profiles manually using the admin client to ensure we bypass RLS issues
   const { data: dbDoctors } = await adminClient

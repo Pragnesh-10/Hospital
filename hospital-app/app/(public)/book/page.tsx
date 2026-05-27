@@ -5,13 +5,12 @@ import { createClient } from '@/lib/supabase/server'
 export default async function BookAppointmentPage({
   searchParams,
 }: {
-  searchParams: { doctor?: string }
+  searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
   const supabase = await createClient()
 
-  // Wait for the search parameters to be available. In Next.js 15, searchParams is an async promise or requires awaiting props.
-  const resolvedParams = await searchParams;
-  const doctorId = resolvedParams?.doctor;
+  const params = await searchParams
+  const defaultDoctorId = params?.doctor
 
   // Fetch doctors from the database
   const { data: rawDoctors, error } = await supabase
@@ -55,7 +54,7 @@ export default async function BookAppointmentPage({
         <CardContent>
           <BookingForm 
             doctors={doctors} 
-            defaultDoctorId={doctorId} 
+            defaultDoctorId={defaultDoctorId} 
             isGuest={!user} 
             leaves={dbLeaves || []} 
           />

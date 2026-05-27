@@ -2,20 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Activity, Calendar, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { requireAdmin } from '@/lib/auth/verifyAdmin'
 import { AdminAnalyticsChart } from './AdminAnalyticsChart'
 import { format, subDays } from 'date-fns'
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { createAdminClient } = await import('@/lib/supabase/admin');
-  const adminClient = createAdminClient();
-  const { data: userData } = await adminClient.from('users').select('role').eq('id', user.id).single();
-  if (userData?.role !== 'admin') redirect('/')
+  const { adminClient } = await requireAdmin()
 
   // Fetch live aggregations using adminClient to bypass RLS policies
   const { count: patientsCount } = await adminClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'patient')

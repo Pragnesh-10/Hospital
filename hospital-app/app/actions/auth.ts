@@ -107,29 +107,20 @@ export async function signup(formData: FormData) {
 
   // 3. Use Admin Client to ensure profiles and roles are created securely bypassing RLS
   try {
-    // Explicitly set the user role to patient
-    const { error: userError } = await adminClient.from('users').upsert({
-      id: signInData.user.id,
-      role: 'patient'
-    })
+    // Create user record (if not already created by a trigger)
+    await adminClient.from('users').upsert(
+      { id: signInData.user.id, role: 'patient' },
+      { onConflict: 'id', ignoreDuplicates: true }
+    )
 
-    if (userError) {
-      console.error("Error inserting into users table:", userError)
-    }
-
-    // Upsert the patient profile
-    const { error: profileError } = await adminClient.from('profiles').upsert({
-      id: signInData.user.id,
-      first_name: firstName,
-      last_name: lastName,
-    })
-
-    if (profileError) {
-      console.error("Error inserting into profiles table:", profileError)
-    }
-  } catch (err: any) {
-    console.error("Registration Admin Client Error:", err)
-    redirect(`/login?message=Account created but failed to save profile: ${err.message}`)
+    // Create profile record (if not already created by a trigger)
+    await adminClient.from('profiles').upsert(
+      { id: signInData.user.id, first_name: firstName, last_name: lastName },
+      { onConflict: 'id', ignoreDuplicates: true }
+    )
+  } catch (upsertError) {
+    // Log the error but continue since the session is established and the auth user exists
+    console.error("Error creating user profile during signup:", upsertError)
   }
 
   revalidatePath('/', 'layout')

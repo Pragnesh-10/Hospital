@@ -51,7 +51,7 @@ export function ProvisionForm() {
 
       <div className="space-y-2">
         <Label htmlFor="password">Temporary Password</Label>
-        <Input id="password" name="password" type="text" required placeholder="Will be securely set for this user" />
+        <Input id="password" name="password" type="password" required minLength={8} placeholder="Minimum 8 characters" />
       </div>
 
       <div className="space-y-2">

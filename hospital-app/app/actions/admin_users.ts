@@ -81,7 +81,7 @@ export async function provisionAccount(formData: FormData) {
         .from('doctors')
         .upsert({
           id: newUserId,
-          specialization,
+          specialization: specialization || '',
           is_active: true
         })
       if (docError) throw new Error(`Doctor DB Error: ${docError.message}`)
