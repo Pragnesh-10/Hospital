@@ -391,7 +391,9 @@ export function BookingForm({
               }} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a doctor" />
+                    <SelectValue placeholder="Select a doctor">
+                      {selectedDoctor ? `Dr. ${selectedDoctor.profiles?.first_name} ${selectedDoctor.profiles?.last_name} (${selectedDoctor.specialization})` : undefined}
+                    </SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
