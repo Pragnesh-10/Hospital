@@ -45,6 +45,7 @@ type Doctor = {
   id: string
   specialization: string
   consultation_fee: number
+  slot_interval_min?: number
   profiles: any
 }
 
@@ -123,29 +124,61 @@ export function BookingForm({
     }
   }, [watchedDob, form])
 
-  // Generate some dummy time slots and filter them based on leaves
-  const allTimeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00"]
-  
-  const timeSlots = allTimeSlots.filter(time => {
-    if (!selectedDoctorId || !selectedDate) return true
-    
-    const [hours, minutes] = time.split(':')
-    const slotDate = new Date(selectedDate)
-    slotDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+  // Generate slots dynamically based on the selected doctor's custom interval
+  const selectedDoctor = useMemo(() => {
+    return doctors.find(d => d.id === selectedDoctorId)
+  }, [doctors, selectedDoctorId])
 
-    const doctorLeaves = leaves.filter(l => l.doctor_id === selectedDoctorId)
+  const interval = selectedDoctor?.slot_interval_min ?? 30
+
+  const allTimeSlots = useMemo(() => {
+    const slots: string[] = []
     
-    for (const leave of doctorLeaves) {
-      const start = new Date(leave.start_date)
-      const end = new Date(leave.end_date)
-      
-      // If the slot falls inside the leave range
-      if (slotDate >= start && slotDate < end) {
-        return false
-      }
+    // Morning session: 09:00 to 12:00
+    let current = 9 * 60 // 09:00 in minutes
+    const morningEnd = 12 * 60 // 12:00 in minutes
+    while (current + interval <= morningEnd) {
+      const hrs = Math.floor(current / 60)
+      const mins = current % 60
+      slots.push(`${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`)
+      current += interval
     }
-    return true
-  })
+
+    // Afternoon session: 14:00 to 17:00
+    current = 14 * 60 // 14:00 in minutes
+    const afternoonEnd = 17 * 60 // 17:00 in minutes
+    while (current + interval <= afternoonEnd) {
+      const hrs = Math.floor(current / 60)
+      const mins = current % 60
+      slots.push(`${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`)
+      current += interval
+    }
+
+    return slots
+  }, [interval])
+  
+  const timeSlots = useMemo(() => {
+    return allTimeSlots.filter(time => {
+      if (!selectedDoctorId || !selectedDate) return true
+      
+      const [hours, minutes] = time.split(':')
+      const slotDate = new Date(selectedDate)
+      slotDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+
+      const doctorLeaves = leaves.filter(l => l.doctor_id === selectedDoctorId)
+      
+      for (const leave of doctorLeaves) {
+        const start = new Date(leave.start_date)
+        const end = new Date(leave.end_date)
+        
+        // If the slot falls inside the leave range
+        if (slotDate >= start && slotDate < end) {
+          return false
+        }
+      }
+      return true
+    })
+  }, [allTimeSlots, selectedDoctorId, selectedDate, leaves])
 
   async function onSubmit(values: z.infer<typeof dynamicFormSchema>) {
     if (isGuest && (!values.guest_name || !values.guest_phone || !values.guest_address || !values.guest_city || !values.guest_state || !values.guest_country)) {
@@ -334,7 +367,7 @@ export function BookingForm({
                 field.onChange(val)
                 form.setValue("appointment_date", undefined as unknown as Date)
                 form.setValue("appointment_time", "")
-              }} defaultValue={field.value}>
+              }} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a doctor" />
@@ -421,7 +454,7 @@ export function BookingForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Time</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a time" />

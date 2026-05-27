@@ -15,7 +15,7 @@ export default async function BookAppointmentPage({
   // Fetch doctors and profiles using a single joined query now that the FK exists
   const { data: rawDoctors, error } = await supabase
     .from('doctors')
-    .select('id, specialization, consultation_fee, profiles(id, first_name, last_name)')
+    .select('id, specialization, consultation_fee, slot_interval_min, profiles(id, first_name, last_name)')
     .eq('is_active', true)
 
   const doctors = (!error && rawDoctors) ? rawDoctors : []

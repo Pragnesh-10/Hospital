@@ -31,7 +31,7 @@ export async function toggleDoctorStatus(doctorId: string, currentStatus: boolea
   return { success: true }
 }
 
-export async function updateConsultationFee(doctorId: string, formData: FormData) {
+export async function updateDoctorSettings(doctorId: string, formData: FormData) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -49,9 +49,16 @@ export async function updateConsultationFee(doctorId: string, formData: FormData
     return { error: 'Please enter a valid fee amount.' }
   }
 
+  const intervalStr = formData.get('interval') as string
+  const interval = parseInt(intervalStr, 10)
+
+  if (isNaN(interval) || ![15, 30, 45, 60].includes(interval)) {
+    return { error: 'Please select a valid slot interval (15, 30, 45, or 60 minutes).' }
+  }
+
   const { error } = await adminClient
     .from('doctors')
-    .update({ consultation_fee: fee })
+    .update({ consultation_fee: fee, slot_interval_min: interval })
     .eq('id', doctorId)
 
   if (error) {

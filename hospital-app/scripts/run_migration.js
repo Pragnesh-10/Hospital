@@ -14,7 +14,7 @@ async function runMigration() {
   await client.connect();
   
   try {
-    // 1. Check existing columns
+    // 1. Check existing columns of appointments
     const columnsRes = await client.query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -23,6 +23,16 @@ async function runMigration() {
     
     const existingColumns = columnsRes.rows.map(r => r.column_name);
     console.log("Current appointments table columns:", existingColumns.join(', '));
+
+    // 1b. Check existing columns of doctors
+    const docColumnsRes = await client.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_schema = 'public' AND table_name = 'doctors';
+    `);
+    
+    const existingDocColumns = docColumnsRes.rows.map(r => r.column_name);
+    console.log("Current doctors table columns:", existingDocColumns.join(', '));
 
     let altered = false;
 
@@ -61,6 +71,15 @@ async function runMigration() {
       altered = true;
     } else {
       console.log("- Column patient_age already exists");
+    }
+
+    // 6. Add slot_interval_min if missing
+    if (!existingDocColumns.includes('slot_interval_min')) {
+      await client.query(`ALTER TABLE public.doctors ADD COLUMN slot_interval_min INTEGER NOT NULL DEFAULT 30;`);
+      console.log("✓ Added missing column: slot_interval_min (INTEGER) to doctors");
+      altered = true;
+    } else {
+      console.log("- Column slot_interval_min already exists on doctors");
     }
 
     if (altered) {

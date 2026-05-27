@@ -39,6 +39,7 @@ export default async function ManageDoctorsPage() {
                 <TableHead>Specialization</TableHead>
                 <TableHead>Experience</TableHead>
                 <TableHead>Consultation Fee</TableHead>
+                <TableHead>Slot Interval</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -61,6 +62,11 @@ export default async function ManageDoctorsPage() {
                     )}
                   </TableCell>
                   <TableCell>
+                    <span className="font-medium text-foreground">
+                      {doc.slot_interval_min ?? 30} mins
+                    </span>
+                  </TableCell>
+                  <TableCell>
                     {doc.is_active ? (
                       <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">Active</Badge>
                     ) : (
@@ -72,6 +78,7 @@ export default async function ManageDoctorsPage() {
                       <EditFeeModal
                         doctorId={doc.id}
                         currentFee={doc.consultation_fee ?? 0}
+                        currentInterval={doc.slot_interval_min ?? 30}
                         doctorName={`Dr. ${doc.profiles?.first_name} ${doc.profiles?.last_name}`}
                       />
                       <DoctorToggleAction doctorId={doc.id} isActive={doc.is_active} />
@@ -80,7 +87,7 @@ export default async function ManageDoctorsPage() {
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                     No doctors found in the database.
                   </TableCell>
                 </TableRow>

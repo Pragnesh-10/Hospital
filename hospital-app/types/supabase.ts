@@ -30,9 +30,9 @@ export interface Database {
         ]
       }
       doctors: {
-        Row: { id: string; specialization: string; bio: string | null; experience_years: number; consultation_fee: number; is_active: boolean; availability?: string | null }
-        Insert: { id: string; specialization: string; bio?: string | null; experience_years?: number; consultation_fee?: number; is_active?: boolean; availability?: string | null }
-        Update: { id?: string; specialization?: string; bio?: string | null; experience_years?: number; consultation_fee?: number; is_active?: boolean; availability?: string | null }
+        Row: { id: string; specialization: string; bio: string | null; experience_years: number; consultation_fee: number; is_active: boolean; availability?: string | null; slot_interval_min: number }
+        Insert: { id: string; specialization: string; bio?: string | null; experience_years?: number; consultation_fee?: number; is_active?: boolean; availability?: string | null; slot_interval_min?: number }
+        Update: { id?: string; specialization?: string; bio?: string | null; experience_years?: number; consultation_fee?: number; is_active?: boolean; availability?: string | null; slot_interval_min?: number }
         Relationships: [
           {
             foreignKeyName: "doctors_id_fkey"

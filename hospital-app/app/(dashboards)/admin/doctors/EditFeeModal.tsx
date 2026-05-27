@@ -12,17 +12,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { toast } from 'sonner'
-import { updateConsultationFee } from '@/app/actions/admin'
+import { updateDoctorSettings } from '@/app/actions/admin'
 import { Pencil } from 'lucide-react'
 
 export function EditFeeModal({
   doctorId,
   currentFee,
+  currentInterval = 30,
   doctorName,
 }: {
   doctorId: string
   currentFee: number
+  currentInterval?: number
   doctorName: string
 }) {
   const [open, setOpen] = useState(false)
@@ -33,12 +42,12 @@ export function EditFeeModal({
     setLoading(true)
 
     const formData = new FormData(e.currentTarget)
-    const result = await updateConsultationFee(doctorId, formData)
+    const result = await updateDoctorSettings(doctorId, formData)
 
     if (result.error) {
       toast.error(result.error)
     } else {
-      toast.success('Consultation fee updated!')
+      toast.success('Doctor settings updated!')
       setOpen(false)
     }
 
@@ -49,13 +58,13 @@ export function EditFeeModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button variant="outline" size="sm" />}>
         <Pencil className="w-3 h-3 mr-1" />
-        Edit Fee
+        Edit Settings
       </DialogTrigger>
       <DialogContent className="sm:max-w-[360px]">
         <DialogHeader>
-          <DialogTitle>Edit Consultation Fee</DialogTitle>
+          <DialogTitle>Edit Doctor Settings</DialogTitle>
           <DialogDescription>
-            Update the consultation fee for <strong>{doctorName}</strong>.
+            Update consultation fee and slot interval for <strong>{doctorName}</strong>.
           </DialogDescription>
         </DialogHeader>
 
@@ -78,12 +87,27 @@ export function EditFeeModal({
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="interval">Appointment Slot Interval</Label>
+            <Select name="interval" defaultValue={String(currentInterval)}>
+              <SelectTrigger id="interval">
+                <SelectValue placeholder="Select interval" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="15">15 minutes</SelectItem>
+                <SelectItem value="30">30 minutes</SelectItem>
+                <SelectItem value="45">45 minutes</SelectItem>
+                <SelectItem value="60">60 minutes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" type="button" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Fee'}
+              {loading ? 'Saving...' : 'Save Settings'}
             </Button>
           </div>
         </form>
