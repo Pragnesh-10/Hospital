@@ -2,8 +2,14 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Activity, Clock, Users, ShieldCheck, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { getSystemSettings } from '@/app/actions/admin'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const res = await getSystemSettings()
+  const hospitalImage = typeof res.settings?.hospital_hero_image === 'string'
+    ? res.settings.hospital_hero_image
+    : 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?auto=format&fit=crop&w=1200&q=80'
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -45,11 +51,12 @@ export default function HomePage() {
             </div>
             
             <div className="mx-auto w-full max-w-[500px] lg:max-w-none">
-              <div className="aspect-square rounded-2xl bg-muted/50 relative overflow-hidden border">
-                {/* Placeholder for hero image */}
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                  <Activity className="h-24 w-24 opacity-20" />
-                </div>
+              <div className="aspect-square rounded-2xl bg-muted relative overflow-hidden border shadow-md transition-all hover:scale-[1.01] duration-300">
+                <img 
+                  src={hospitalImage} 
+                  alt="Medicare Plus Hospital" 
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
           </div>

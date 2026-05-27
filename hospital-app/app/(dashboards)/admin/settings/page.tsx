@@ -11,6 +11,7 @@ export default async function AdminSettingsPage() {
     maintenance_mode: res.settings?.maintenance_mode === true, // default false
     require_email_confirmation: res.settings?.require_email_confirmation === true, // default false
     sms_notifications: res.settings?.sms_notifications !== false, // default true
+    hospital_hero_image: typeof res.settings?.hospital_hero_image === 'string' ? res.settings.hospital_hero_image : '',
   }
 
   return (

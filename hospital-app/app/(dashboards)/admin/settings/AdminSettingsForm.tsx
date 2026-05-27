@@ -4,8 +4,11 @@ import { useState, useTransition } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { updateSystemSetting } from '@/app/actions/admin'
+import { uploadHospitalHeroImage } from '@/app/actions/upload'
 
 export function AdminSettingsForm({
   initialSettings,
@@ -15,12 +18,15 @@ export function AdminSettingsForm({
     maintenance_mode: boolean;
     require_email_confirmation: boolean;
     sms_notifications: boolean;
+    hospital_hero_image: string;
   }
 }) {
   const [allowGuest, setAllowGuest] = useState(initialSettings.allow_guest_bookings)
   const [maintenance, setMaintenance] = useState(initialSettings.maintenance_mode)
   const [requireEmail, setRequireEmail] = useState(initialSettings.require_email_confirmation)
   const [smsNotifications, setSmsNotifications] = useState(initialSettings.sms_notifications)
+  const [hospitalPhoto, setHospitalPhoto] = useState(initialSettings.hospital_hero_image)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const handleToggle = (key: string, currentValue: boolean, setter: (val: boolean) => void) => {
@@ -38,8 +44,35 @@ export function AdminSettingsForm({
     })
   }
 
+  const handlePhotoUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const file = formData.get('image') as File
+    if (!file || file.size === 0) {
+      toast.error('Please select an image file first.')
+      return
+    }
+
+    setIsUploadingPhoto(true)
+    try {
+      const res = await uploadHospitalHeroImage(formData)
+      if (res.error) {
+        toast.error(res.error)
+      } else if (res.success && res.url) {
+        toast.success('Hospital photo updated successfully!')
+        setHospitalPhoto(res.url)
+        ;(e.target as HTMLFormElement).reset()
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to upload photo')
+    } finally {
+      setIsUploadingPhoto(false)
+    }
+  }
+
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>Booking Preferences</CardTitle>
@@ -103,6 +136,59 @@ export function AdminSettingsForm({
               disabled={isPending}
             />
           </div>
+        </CardContent>
+      </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Hospital Landing Photo</CardTitle>
+          <CardDescription>Upload a custom photo of the hospital to display on the main landing page.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <form onSubmit={handlePhotoUpload} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="hospital-photo-file">Select Image File</Label>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <Input 
+                  id="hospital-photo-file" 
+                  name="image" 
+                  type="file" 
+                  accept="image/*" 
+                  required 
+                  className="cursor-pointer max-w-sm"
+                  disabled={isUploadingPhoto}
+                />
+                <Button type="submit" disabled={isUploadingPhoto}>
+                  {isUploadingPhoto ? 'Uploading...' : 'Upload & Save Photo'}
+                </Button>
+              </div>
+            </div>
+          </form>
+
+          {hospitalPhoto ? (
+            <div className="space-y-2">
+              <Label>Current Hospital Photo Preview</Label>
+              <div className="relative aspect-video max-w-md rounded-xl overflow-hidden border shadow-sm bg-muted">
+                <img 
+                  src={hospitalPhoto} 
+                  alt="Hospital Hero" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Default Landing Photo Preview</Label>
+              <div className="relative aspect-video max-w-md rounded-xl overflow-hidden border shadow-sm bg-muted">
+                <img 
+                  src="https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?auto=format&fit=crop&w=1200&q=80" 
+                  alt="Default Hospital Hero" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

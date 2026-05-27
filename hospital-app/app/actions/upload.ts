@@ -126,3 +126,67 @@ export async function uploadDoctorImage(formData: FormData) {
     return { error: err.message || "An unexpected error occurred" }
   }
 }
+
+export async function uploadHospitalHeroImage(formData: FormData) {
+  const supabase = await createClient()
+
+  // 1. Verify admin
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  const { data: userRole } = await adminClient.from('users').select('role').eq('id', user.id).single();
+  if (userRole?.role !== 'admin') return { error: "Not authorized. Admin only." }
+
+  // 2. Get file
+  const file = formData.get('image') as File
+  if (!file || file.size === 0) {
+    return { error: "File is required" }
+  }
+  
+  try {
+    // Ensure bucket exists
+    const { data: buckets } = await adminClient.storage.listBuckets()
+    if (!buckets?.find(b => b.name === 'hospital-images')) {
+      await adminClient.storage.createBucket('hospital-images', { public: true })
+    }
+
+    const fileExt = file.name.split('.').pop()
+    const fileName = `hero-hospital-${Math.random()}.${fileExt}`
+    const filePath = `${fileName}`
+
+    // 3. Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await adminClient.storage
+      .from('hospital-images')
+      .upload(filePath, file)
+
+    if (uploadError) {
+      console.error("Storage Error:", uploadError)
+      return { error: uploadError.message }
+    }
+
+    // 4. Get Public URL
+    const { data: { publicUrl } } = adminClient.storage
+      .from('hospital-images')
+      .getPublicUrl(filePath)
+
+    // 5. Update system_settings table (saving JSONB string)
+    const { error: dbError } = await adminClient
+      .from('system_settings')
+      .upsert({ key: 'hospital_hero_image', value: JSON.stringify(publicUrl) })
+
+    if (dbError) {
+      console.error("Database Error:", dbError)
+      return { error: "Failed to update hospital photo setting" }
+    }
+
+    revalidatePath('/admin/settings')
+    revalidatePath('/')
+    return { success: true, url: publicUrl }
+
+  } catch (err: any) {
+    return { error: err.message || "An unexpected error occurred" }
+  }
+}
+
