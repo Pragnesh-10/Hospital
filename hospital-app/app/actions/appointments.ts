@@ -146,7 +146,7 @@ export async function createAppointment(formData: FormData) {
       patient_id,
       patient_age,
       patient_dob,
-      profiles:patient_id (
+      profiles (
         first_name,
         last_name
       ),
