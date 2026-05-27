@@ -17,6 +17,7 @@ type Entity = {
 
 export function AdminUploadForm({ type, entities }: { type: 'doctor' | 'facility', entities: Entity[] }) {
   const [isUploading, setIsUploading] = useState(false)
+  const [selectedValue, setSelectedValue] = useState("")
   const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -37,6 +38,7 @@ export function AdminUploadForm({ type, entities }: { type: 'doctor' | 'facility
     } else {
       toast.success("Image uploaded successfully!")
       ;(e.target as HTMLFormElement).reset()
+      setSelectedValue("")
       router.refresh()
     }
     
@@ -47,7 +49,11 @@ export function AdminUploadForm({ type, entities }: { type: 'doctor' | 'facility
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label>Select {type === 'doctor' ? 'Doctor' : 'Facility'}</Label>
-        <Select name={type === 'doctor' ? 'doctor_id' : 'facility_id'} required>
+        <Select 
+          value={selectedValue} 
+          onValueChange={(val) => setSelectedValue(val || "")}
+          required
+        >
           <SelectTrigger>
             <SelectValue placeholder={`Select a ${type}`} />
           </SelectTrigger>
@@ -61,6 +67,11 @@ export function AdminUploadForm({ type, entities }: { type: 'doctor' | 'facility
             ))}
           </SelectContent>
         </Select>
+        <input 
+          type="hidden" 
+          name={type === 'doctor' ? 'doctor_id' : 'facility_id'} 
+          value={selectedValue} 
+        />
       </div>
 
       <div className="space-y-2">

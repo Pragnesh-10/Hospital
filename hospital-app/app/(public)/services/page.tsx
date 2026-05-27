@@ -2,8 +2,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { HeartPulse, Stethoscope, Microscope, Pill, Phone, Calendar, ArrowRight, ShieldCheck, Check } from 'lucide-react'
 import Link from 'next/link'
+import { getSystemSettings } from '@/app/actions/admin'
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const res = await getSystemSettings()
+  
+  const emergencyImg = typeof res.settings?.service_emergency === 'string' ? res.settings.service_emergency : null
+  const opdImg = typeof res.settings?.service_opd === 'string' ? res.settings.service_opd : null
+  const diagnosticsImg = typeof res.settings?.service_diagnostics === 'string' ? res.settings.service_diagnostics : null
+  const pharmacyImg = typeof res.settings?.service_pharmacy === 'string' ? res.settings.service_pharmacy : null
   return (
     <div className="container py-20 px-4 md:px-6 space-y-20">
       {/* Header Section */}
@@ -48,9 +55,15 @@ export default function ServicesPage() {
             </div>
           </div>
           
-          <div className="aspect-video lg:aspect-square bg-muted rounded-2xl overflow-hidden border relative flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/10 dark:to-red-950/20">
-            <HeartPulse className="h-32 w-32 text-red-500/20 animate-pulse" />
-          </div>
+          {emergencyImg ? (
+            <div className="aspect-video lg:aspect-square rounded-2xl overflow-hidden border relative">
+              <img src={emergencyImg} alt="Emergency Care & Trauma Center" className="w-full h-full object-cover animate-in fade-in-50 duration-500" />
+            </div>
+          ) : (
+            <div className="aspect-video lg:aspect-square bg-muted rounded-2xl overflow-hidden border relative flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/10 dark:to-red-950/20">
+              <HeartPulse className="h-32 w-32 text-red-500/20 animate-pulse" />
+            </div>
+          )}
         </section>
 
         {/* 2. Outpatient Department (OPD) */}
@@ -85,9 +98,15 @@ export default function ServicesPage() {
             </div>
           </div>
           
-          <div className="lg:order-1 aspect-video lg:aspect-square bg-muted rounded-2xl overflow-hidden border relative flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/10 dark:to-blue-950/20">
-            <Stethoscope className="h-32 w-32 text-blue-500/20" />
-          </div>
+          {opdImg ? (
+            <div className="lg:order-1 aspect-video lg:aspect-square rounded-2xl overflow-hidden border relative">
+              <img src={opdImg} alt="Outpatient Department (OPD)" className="w-full h-full object-cover animate-in fade-in-50 duration-500" />
+            </div>
+          ) : (
+            <div className="lg:order-1 aspect-video lg:aspect-square bg-muted rounded-2xl overflow-hidden border relative flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/10 dark:to-blue-950/20">
+              <Stethoscope className="h-32 w-32 text-blue-500/20" />
+            </div>
+          )}
         </section>
 
         {/* 3. Diagnostics */}
@@ -122,9 +141,15 @@ export default function ServicesPage() {
             </div>
           </div>
           
-          <div className="aspect-video lg:aspect-square bg-muted rounded-2xl overflow-hidden border relative flex items-center justify-center bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-950/10 dark:to-indigo-950/20">
-            <Microscope className="h-32 w-32 text-indigo-500/20" />
-          </div>
+          {diagnosticsImg ? (
+            <div className="aspect-video lg:aspect-square rounded-2xl overflow-hidden border relative">
+              <img src={diagnosticsImg} alt="Advanced Diagnostics & Pathology" className="w-full h-full object-cover animate-in fade-in-50 duration-500" />
+            </div>
+          ) : (
+            <div className="aspect-video lg:aspect-square bg-muted rounded-2xl overflow-hidden border relative flex items-center justify-center bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-950/10 dark:to-indigo-950/20">
+              <Microscope className="h-32 w-32 text-indigo-500/20" />
+            </div>
+          )}
         </section>
 
         {/* 4. Pharmacy */}
@@ -159,9 +184,15 @@ export default function ServicesPage() {
             </div>
           </div>
           
-          <div className="lg:order-1 aspect-video lg:aspect-square bg-muted rounded-2xl overflow-hidden border relative flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-950/20">
-            <Pill className="h-32 w-32 text-emerald-500/20" />
-          </div>
+          {pharmacyImg ? (
+            <div className="lg:order-1 aspect-video lg:aspect-square rounded-2xl overflow-hidden border relative">
+              <img src={pharmacyImg} alt="24/7 In-House Pharmacy" className="w-full h-full object-cover animate-in fade-in-50 duration-500" />
+            </div>
+          ) : (
+            <div className="lg:order-1 aspect-video lg:aspect-square bg-muted rounded-2xl overflow-hidden border relative flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-950/20">
+              <Pill className="h-32 w-32 text-emerald-500/20" />
+            </div>
+          )}
         </section>
       </div>
     </div>

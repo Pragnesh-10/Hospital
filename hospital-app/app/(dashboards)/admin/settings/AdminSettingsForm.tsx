@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { updateSystemSetting } from '@/app/actions/admin'
-import { uploadHospitalHeroImage } from '@/app/actions/upload'
+import { uploadHospitalHeroImage, uploadServiceImage } from '@/app/actions/upload'
 
 export function AdminSettingsForm({
   initialSettings,
@@ -20,6 +20,10 @@ export function AdminSettingsForm({
     require_email_confirmation: boolean;
     sms_notifications: boolean;
     hospital_hero_image: string;
+    service_emergency: string;
+    service_opd: string;
+    service_diagnostics: string;
+    service_pharmacy: string;
   }
 }) {
   const [allowGuest, setAllowGuest] = useState(initialSettings.allow_guest_bookings)
@@ -27,7 +31,12 @@ export function AdminSettingsForm({
   const [requireEmail, setRequireEmail] = useState(initialSettings.require_email_confirmation)
   const [smsNotifications, setSmsNotifications] = useState(initialSettings.sms_notifications)
   const [hospitalPhoto, setHospitalPhoto] = useState(initialSettings.hospital_hero_image)
+  const [emergencyPhoto, setEmergencyPhoto] = useState(initialSettings.service_emergency)
+  const [opdPhoto, setOpdPhoto] = useState(initialSettings.service_opd)
+  const [diagnosticsPhoto, setDiagnosticsPhoto] = useState(initialSettings.service_diagnostics)
+  const [pharmacyPhoto, setPharmacyPhoto] = useState(initialSettings.service_pharmacy)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [uploadingService, setUploadingService] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -71,6 +80,34 @@ export function AdminSettingsForm({
       toast.error(err.message || 'Failed to upload photo')
     } finally {
       setIsUploadingPhoto(false)
+    }
+  }
+
+  const handleServicePhotoUpload = async (e: React.FormEvent<HTMLFormElement>, key: string, setter: (val: string) => void) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const file = formData.get('image') as File
+    if (!file || file.size === 0) {
+      toast.error('Please select an image file first.')
+      return
+    }
+
+    setUploadingService(key)
+    try {
+      formData.append('service_key', key)
+      const res = await uploadServiceImage(formData)
+      if (res.error) {
+        toast.error(res.error)
+      } else if (res.success && res.url) {
+        toast.success('Service photo updated successfully!')
+        setter(res.url)
+        ;(e.target as HTMLFormElement).reset()
+        router.refresh()
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to upload photo')
+    } finally {
+      setUploadingService(null)
     }
   }
 
@@ -193,6 +230,81 @@ export function AdminSettingsForm({
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Page Photos</CardTitle>
+          <CardDescription>Upload custom images for each of the main hospital services shown on the public Services page.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          {[
+            {
+              label: "Emergency Care & Trauma Center",
+              key: "service_emergency",
+              photo: emergencyPhoto,
+              setPhoto: setEmergencyPhoto,
+              fallback: "https://images.unsplash.com/photo-1517222329249-48c683345aad?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+              label: "Outpatient Department (OPD)",
+              key: "service_opd",
+              photo: opdPhoto,
+              setPhoto: setOpdPhoto,
+              fallback: "https://images.unsplash.com/photo-1579684389782-64d84b5e901a?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+              label: "Advanced Diagnostics & Pathology",
+              key: "service_diagnostics",
+              photo: diagnosticsPhoto,
+              setPhoto: setDiagnosticsPhoto,
+              fallback: "https://images.unsplash.com/photo-1579154204601-01588f351166?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+              label: "24/7 In-House Pharmacy",
+              key: "service_pharmacy",
+              photo: pharmacyPhoto,
+              setPhoto: setPharmacyPhoto,
+              fallback: "https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=600&q=80"
+            }
+          ].map((item) => (
+            <div key={item.key} className="border p-6 rounded-xl space-y-4 bg-muted/20">
+              <h3 className="font-semibold text-lg">{item.label}</h3>
+              <form 
+                onSubmit={(e) => handleServicePhotoUpload(e, item.key, item.setPhoto)} 
+                className="flex flex-col sm:flex-row gap-4 items-start sm:items-center"
+              >
+                <Input 
+                  name="image" 
+                  type="file" 
+                  accept="image/*" 
+                  required 
+                  className="cursor-pointer max-w-sm bg-background"
+                  disabled={uploadingService !== null}
+                />
+                <Button type="submit" disabled={uploadingService !== null}>
+                  {uploadingService === item.key ? 'Uploading...' : 'Upload Image'}
+                </Button>
+              </form>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Preview</Label>
+                <div className="relative aspect-video max-w-xs rounded-lg overflow-hidden border shadow-sm bg-muted">
+                  <img 
+                    src={item.photo || item.fallback} 
+                    alt={item.label} 
+                    className="w-full h-full object-cover"
+                  />
+                  {!item.photo && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold px-2.5 py-1 bg-black/60 rounded-full">Using Default Illustration</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

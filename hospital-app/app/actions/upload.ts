@@ -190,3 +190,73 @@ export async function uploadHospitalHeroImage(formData: FormData) {
   }
 }
 
+export async function uploadServiceImage(formData: FormData) {
+  const supabase = await createClient()
+
+  // 1. Verify admin
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminClient = createAdminClient();
+  const { data: userRole } = await adminClient.from('users').select('role').eq('id', user.id).single();
+  if (userRole?.role !== 'admin') return { error: "Not authorized. Admin only." }
+
+  // 2. Get file and service key
+  const file = formData.get('image') as File
+  const serviceKey = formData.get('service_key') as string
+
+  if (!file || file.size === 0 || !serviceKey) {
+    return { error: "File and Service Key are required" }
+  }
+
+  const validKeys = ['service_emergency', 'service_opd', 'service_diagnostics', 'service_pharmacy']
+  if (!validKeys.includes(serviceKey)) {
+    return { error: "Invalid Service Key" }
+  }
+  
+  try {
+    // Ensure bucket exists
+    const { data: buckets } = await adminClient.storage.listBuckets()
+    if (!buckets?.find(b => b.name === 'hospital-images')) {
+      await adminClient.storage.createBucket('hospital-images', { public: true })
+    }
+
+    const fileExt = file.name.split('.').pop()
+    const fileName = `service-${serviceKey}-${Math.random()}.${fileExt}`
+    const filePath = `${fileName}`
+
+    // 3. Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await adminClient.storage
+      .from('hospital-images')
+      .upload(filePath, file)
+
+    if (uploadError) {
+      console.error("Storage Error:", uploadError)
+      return { error: uploadError.message }
+    }
+
+    // 4. Get Public URL
+    const { data: { publicUrl } } = adminClient.storage
+      .from('hospital-images')
+      .getPublicUrl(filePath)
+
+    // 5. Update system_settings table (saving JSONB string)
+    const { error: dbError } = await adminClient
+      .from('system_settings')
+      .upsert({ key: serviceKey, value: JSON.stringify(publicUrl) })
+
+    if (dbError) {
+      console.error("Database Error:", dbError)
+      return { error: "Failed to update service photo setting" }
+    }
+
+    revalidatePath('/admin/settings')
+    revalidatePath('/services')
+    return { success: true, url: publicUrl }
+
+  } catch (err: any) {
+    return { error: err.message || "An unexpected error occurred" }
+  }
+}
+

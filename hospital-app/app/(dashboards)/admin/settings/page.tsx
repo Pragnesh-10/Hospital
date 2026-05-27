@@ -12,6 +12,10 @@ export default async function AdminSettingsPage() {
     require_email_confirmation: res.settings?.require_email_confirmation === true, // default false
     sms_notifications: res.settings?.sms_notifications !== false, // default true
     hospital_hero_image: typeof res.settings?.hospital_hero_image === 'string' ? res.settings.hospital_hero_image : '',
+    service_emergency: typeof res.settings?.service_emergency === 'string' ? res.settings.service_emergency : '',
+    service_opd: typeof res.settings?.service_opd === 'string' ? res.settings.service_opd : '',
+    service_diagnostics: typeof res.settings?.service_diagnostics === 'string' ? res.settings.service_diagnostics : '',
+    service_pharmacy: typeof res.settings?.service_pharmacy === 'string' ? res.settings.service_pharmacy : '',
   }
 
   return (
