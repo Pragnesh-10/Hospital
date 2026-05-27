@@ -22,6 +22,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="enter url here"
 DATABASE_URL="enter url here"
 DIRECT_URL="enter url here"
 SUPABASE_SERVICE_ROLE_KEY="enter url here"
+UPSTASH_REDIS_REST_URL="enter here"
+UPSTASH_REDIS_REST_TOKEN="enter here"
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

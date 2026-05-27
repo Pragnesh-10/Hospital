@@ -1,43 +1,48 @@
 import { updateSession } from '@/lib/supabase/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
-import { LRUCache } from 'lru-cache'
+import { Redis } from '@upstash/redis'
+import { Ratelimit } from '@upstash/ratelimit'
 
-// Note: In a multi-region serverless environment (like Vercel), in-memory caches 
-// are isolated per-instance. For global rate limiting, a distributed cache like 
-// Upstash Redis is required. However, this LRU cache provides immediate brute-force 
-// protection per-instance.
-const rateLimit = new LRUCache<string, number>({
-  max: 500, // Maximum number of unique IPs tracked
-  ttl: 60 * 1000, // 1 minute window
-})
+// Initialize Upstash Redis Ratelimiter only if environment variables are provided
+let ratelimit: Ratelimit | null = null
+
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  })
+
+  // Global Rate Limiter: 100 requests per 1 minute window
+  ratelimit = new Ratelimit({
+    redis: redis,
+    limiter: Ratelimit.slidingWindow(100, '1 m'),
+    analytics: true,
+  })
+}
 
 export async function middleware(request: NextRequest) {
-  // 1. Rate Limiting Protection (100 requests per minute per IP)
+  // 1. Rate Limiting Protection
   // Get IP (Vercel forwards it in x-forwarded-for)
   const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
   
-  const tokenCount = (rateLimit.get(ip) as number) || 0
-  const limit = 100 // 100 reqs / min
-
-  if (tokenCount >= limit) {
-    return new NextResponse('Too Many Requests. Please try again later.', {
-      status: 429,
-      headers: {
-        'X-RateLimit-Limit': limit.toString(),
-        'X-RateLimit-Remaining': '0',
-        'Retry-After': '60'
-      },
-    })
+  if (ratelimit) {
+    const { success, pending, limit, reset, remaining } = await ratelimit.limit(ip)
+    
+    if (!success) {
+      return new NextResponse('Too Many Requests. Please try again later.', {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': limit.toString(),
+          'X-RateLimit-Remaining': remaining.toString(),
+          'X-RateLimit-Reset': reset.toString(),
+          'Retry-After': '60'
+        },
+      })
+    }
   }
-
-  rateLimit.set(ip, tokenCount + 1)
 
   // 2. Authentication & Authorization (via Supabase)
   const response = await updateSession(request)
-
-  // Attach rate limit headers to successful responses
-  response.headers.set('X-RateLimit-Limit', limit.toString())
-  response.headers.set('X-RateLimit-Remaining', (limit - tokenCount - 1).toString())
 
   return response
 }

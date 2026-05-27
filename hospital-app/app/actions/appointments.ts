@@ -72,6 +72,21 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
+  // Prevent Double Booking: Check if the doctor already has an appointment at this exact date and time
+  const { data: existingAppointments } = await supabase
+    .from('appointments')
+    .select('id')
+    .eq('doctor_id', doctor_id)
+    .eq('appointment_date', appointment_date)
+    .eq('appointment_time', appointment_time)
+    .neq('status', 'cancelled') // Ignore cancelled appointments
+
+  if (existingAppointments && existingAppointments.length > 0) {
+    return {
+      error: "This time slot is already booked. Please choose a different time.",
+    }
+  }
+
   // Insert into database
   const { error } = await supabase
     .from('appointments')
