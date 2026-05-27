@@ -20,7 +20,7 @@ export default async function StaffDashboardPage() {
   ] = await Promise.all([
     supabase
       .from('appointments')
-      .select('*, doctors(profiles(last_name, first_name), specialization), profiles!patient_id(first_name, last_name, phone)')
+      .select('*, doctors(slot_interval_min, profiles(last_name, first_name), specialization), profiles!patient_id(first_name, last_name, phone)')
       .eq('appointment_date', todayDate)
       .order('appointment_time', { ascending: true }),
       

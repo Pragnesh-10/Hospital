@@ -167,9 +167,15 @@ export function BookingForm({
 
       const doctorLeaves = leaves.filter(l => l.doctor_id === selectedDoctorId)
       
+      const parseNaive = (dateStr: string) => {
+        const match = dateStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/)
+        const clean = match ? match[0] : dateStr
+        return new Date(clean)
+      }
+
       for (const leave of doctorLeaves) {
-        const start = new Date(leave.start_date)
-        const end = new Date(leave.end_date)
+        const start = parseNaive(leave.start_date)
+        const end = parseNaive(leave.end_date)
         
         // If the slot falls inside the leave range
         if (slotDate >= start && slotDate < end) {

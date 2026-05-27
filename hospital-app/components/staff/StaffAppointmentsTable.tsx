@@ -140,6 +140,36 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
     }
   }
 
+  const rescheduleSlots = (() => {
+    if (!rescheduleId) return []
+    const selectedAppt = initialAppointments.find(a => a.id === rescheduleId)
+    const interval = selectedAppt?.doctors?.slot_interval_min ?? 30
+    
+    const slots: string[] = []
+    
+    // Morning session: 09:00 to 12:00
+    let current = 9 * 60
+    const morningEnd = 12 * 60
+    while (current + interval <= morningEnd) {
+      const hrs = Math.floor(current / 60)
+      const mins = current % 60
+      slots.push(`${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`)
+      current += interval
+    }
+
+    // Afternoon session: 14:00 to 17:00
+    current = 14 * 60
+    const afternoonEnd = 17 * 60
+    while (current + interval <= afternoonEnd) {
+      const hrs = Math.floor(current / 60)
+      const mins = current % 60
+      slots.push(`${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`)
+      current += interval
+    }
+
+    return slots
+  })()
+
   return (
     <div className="space-y-4">
       {printData && (
@@ -286,12 +316,9 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 17 }, (_, i) => i + 8).map((hour) => {
-                    const h = hour.toString().padStart(2, '0')
-                    return (
-                      <SelectItem key={`${h}:00`} value={`${h}:00:00`}>{`${h}:00`}</SelectItem>
-                    )
-                  })}
+                  {rescheduleSlots.map((time) => (
+                    <SelectItem key={time} value={`${time}:00`}>{time}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

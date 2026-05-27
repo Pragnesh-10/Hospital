@@ -72,8 +72,15 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
+  // Helper to parse dates timezone-naively (wall-clock time) to prevent client/server timezone offsets
+  function parseNaive(dateStr: string): Date {
+    const match = dateStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/)
+    const clean = match ? match[0] : dateStr
+    return new Date(clean)
+  }
+
   // Construct the full appointment datetime
-  const appointmentDateTime = new Date(`${appointment_date}T${appointment_time}:00`)
+  const appointmentDateTime = parseNaive(`${appointment_date}T${appointment_time}`)
 
   const supabaseAdmin = createAdminClient()
 
@@ -85,8 +92,8 @@ export async function createAppointment(formData: FormData) {
 
   if (leaves && leaves.length > 0) {
     const isOverlapping = leaves.some(leave => {
-      const start = new Date(leave.start_date)
-      const end = new Date(leave.end_date)
+      const start = parseNaive(leave.start_date)
+      const end = parseNaive(leave.end_date)
       return appointmentDateTime >= start && appointmentDateTime < end
     })
 

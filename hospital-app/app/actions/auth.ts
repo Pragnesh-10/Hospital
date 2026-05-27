@@ -131,6 +131,6 @@ export async function signout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   
-  revalidatePath('/', 'layout')
-  redirect('/')
+  // Redirect immediately to prevent server-side re-render crashes of protected dashboards
+  redirect('/login?message=Logged out successfully')
 }
