@@ -18,6 +18,9 @@ export function Navbar() {
       <Link href="/facilities" className="text-sm font-medium transition-colors hover:text-primary">
         Facilities
       </Link>
+      <Link href="/track" className="text-sm font-medium transition-colors hover:text-primary">
+        Track Appointment
+      </Link>
       <Link href="/contact" className="text-sm font-medium transition-colors hover:text-primary">
         Contact
       </Link>

@@ -1,12 +1,11 @@
-// TODO: Search bar is not yet functional.
 // TODO: Pending Reports count is a visual stub (hardcoded to 0).
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Search, Activity, FileText, Calendar } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Activity, FileText, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import Link from 'next/link'
+import { StaffAppointmentsTable } from '@/components/staff/StaffAppointmentsTable'
 
 export default async function StaffDashboardPage() {
   const supabase = await createClient()
@@ -21,7 +20,7 @@ export default async function StaffDashboardPage() {
   ] = await Promise.all([
     supabase
       .from('appointments')
-      .select('*, doctors(profiles(last_name)), profiles!patient_id(first_name, last_name)')
+      .select('*, doctors(profiles(last_name, first_name), specialization), profiles!patient_id(first_name, last_name, phone)')
       .eq('appointment_date', todayDate)
       .order('appointment_time', { ascending: true }),
       
@@ -39,11 +38,7 @@ export default async function StaffDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search patient by ID or Name..." className="pl-8" />
-        </div>
+      <div className="flex flex-col sm:flex-row gap-4 justify-end items-start sm:items-center">
         <Link href="/book">
           <Button>Register Walk-in Patient</Button>
         </Link>
@@ -82,36 +77,13 @@ export default async function StaffDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Today's Schedule</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {todayAppointments && todayAppointments.length > 0 ? todayAppointments.map((appt) => (
-                <div key={appt.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                  <div>
-                    <p className="font-medium">
-                      {appt.appointment_number && <span className="text-primary mr-2">{appt.appointment_number}</span>}
-                      {appt.profiles ? `${appt.profiles.first_name} ${appt.profiles.last_name}` : appt.guest_name || 'Guest'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Dr. {appt.doctors?.profiles?.last_name} • <span className="capitalize">{appt.status}</span>
-                    </p>
-                  </div>
-                  <div className="text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
-                    {appt.appointment_time}
-                  </div>
-                </div>
-              )) : (
-                <p className="text-muted-foreground text-sm">No appointments today.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-xl font-bold">Today's Schedule & Check-in</h2>
+          <StaffAppointmentsTable initialAppointments={todayAppointments || []} />
+        </div>
 
-        <Card>
+        <Card className="h-fit">
           <CardHeader>
             <CardTitle>Recent Registrations</CardTitle>
           </CardHeader>
