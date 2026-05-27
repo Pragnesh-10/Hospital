@@ -3,7 +3,22 @@ import { Button } from '@/components/ui/button'
 import { Activity, Menu } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 
-export function Navbar() {
+export function Navbar({ user, role }: { user: any; role: string | null }) {
+  const getDashboardUrl = (role: string | null) => {
+    switch (role) {
+      case 'admin':
+        return '/admin'
+      case 'doctor':
+        return '/doctor'
+      case 'staff':
+        return '/staff'
+      default:
+        return '/patient'
+    }
+  }
+
+  const dashboardUrl = getDashboardUrl(role)
+
   const NavLinks = () => (
     <>
       <Link href="/" className="text-sm font-medium transition-colors hover:text-primary">
@@ -41,10 +56,21 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <div className="hidden sm:flex gap-4">
-            <Link href="/login">
-              <Button variant="outline">Log in</Button>
-            </Link>
+          <div className="hidden sm:flex items-center gap-4">
+            {user ? (
+              <>
+                <Link href={dashboardUrl}>
+                  <Button variant="outline">Dashboard</Button>
+                </Link>
+                <form action="/auth/signout" method="POST" className="inline">
+                  <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" type="submit">Log out</Button>
+                </form>
+              </>
+            ) : (
+              <Link href="/login">
+                <Button variant="outline">Log in</Button>
+              </Link>
+            )}
             <Link href="/book">
               <Button>Book Appointment</Button>
             </Link>
@@ -67,9 +93,20 @@ export function Navbar() {
                   <NavLinks />
                 </nav>
                 <div className="flex flex-col gap-2 pt-6 border-t">
-                  <Link href="/login" className="w-full">
-                    <Button variant="outline" className="w-full">Log in</Button>
-                  </Link>
+                  {user ? (
+                    <>
+                      <Link href={dashboardUrl} className="w-full">
+                        <Button variant="outline" className="w-full">Dashboard</Button>
+                      </Link>
+                      <form action="/auth/signout" method="POST" className="w-full">
+                        <Button variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10" type="submit">Log out</Button>
+                      </form>
+                    </>
+                  ) : (
+                    <Link href="/login" className="w-full">
+                      <Button variant="outline" className="w-full">Log in</Button>
+                    </Link>
+                  )}
                   <Link href="/book" className="w-full">
                     <Button className="w-full">Book Appointment</Button>
                   </Link>

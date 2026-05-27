@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -37,20 +37,7 @@ import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { createAppointment } from '@/app/actions/appointments'
 
-const formSchema = z.object({
-  doctor_id: z.string().min(1, "Please select a doctor."),
-  appointment_date: z.date(),
-  appointment_time: z.string().min(1, "Please select a time."),
-  reason: z.string().optional(),
-  patient_dob: z.string().optional().or(z.literal("")),
-  patient_age: z.string().min(1, "Age is required."),
-  guest_name: z.string().optional(),
-  guest_phone: z.string().optional(),
-  guest_email: z.string().email("Invalid email").optional().or(z.literal("")),
-  guest_city: z.string().optional(),
-  guest_state: z.string().optional(),
-  guest_country: z.string().optional(),
-})
+// Validation schema is defined dynamically inside the component to support conditional guest fields
 
 type Doctor = {
   id: string
@@ -75,12 +62,37 @@ export function BookingForm({
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const dynamicFormSchema = useMemo(() => {
+    return z.object({
+      doctor_id: z.string().min(1, "Please select a doctor."),
+      appointment_date: z.date({ message: "Please select a date." }),
+      appointment_time: z.string().min(1, "Please select a time."),
+      reason: z.string().optional(),
+      patient_dob: z.string().optional().or(z.literal("")),
+      patient_age: z.string().min(1, "Age is required."),
+      guest_name: isGuest ? z.string().min(1, "Full name is required.") : z.string().optional(),
+      guest_phone: isGuest ? z.string().min(1, "Phone number is required.") : z.string().optional(),
+      guest_email: z.string().email("Invalid email").optional().or(z.literal("")),
+      guest_address: isGuest ? z.string().min(1, "Street address is required.") : z.string().optional(),
+      guest_city: isGuest ? z.string().min(1, "City/Town/Village is required.") : z.string().optional(),
+      guest_state: isGuest ? z.string().min(1, "State is required.") : z.string().optional(),
+      guest_country: isGuest ? z.string().min(1, "Country is required.") : z.string().optional(),
+    })
+  }, [isGuest])
+
+  const form = useForm<z.infer<typeof dynamicFormSchema>>({
+    resolver: zodResolver(dynamicFormSchema),
     defaultValues: {
       doctor_id: defaultDoctorId || "",
       patient_dob: "",
       patient_age: "",
+      guest_name: "",
+      guest_phone: "",
+      guest_email: "",
+      guest_address: "",
+      guest_city: "",
+      guest_state: "",
+      guest_country: "",
     },
   })
 
@@ -132,8 +144,8 @@ export function BookingForm({
     return true
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (isGuest && (!values.guest_name || !values.guest_phone || !values.guest_city || !values.guest_state || !values.guest_country)) {
+  async function onSubmit(values: z.infer<typeof dynamicFormSchema>) {
+    if (isGuest && (!values.guest_name || !values.guest_phone || !values.guest_address || !values.guest_city || !values.guest_state || !values.guest_country)) {
       toast.error("Please provide all required guest information.")
       return
     }
@@ -150,6 +162,7 @@ export function BookingForm({
       if (isGuest && values.guest_name) formData.append('guest_name', values.guest_name)
       if (isGuest && values.guest_email) formData.append('guest_email', values.guest_email)
       if (isGuest && values.guest_phone) formData.append('guest_phone', values.guest_phone)
+      if (isGuest && values.guest_address) formData.append('guest_address', values.guest_address)
       if (isGuest && values.guest_city) formData.append('guest_city', values.guest_city)
       if (isGuest && values.guest_state) formData.append('guest_state', values.guest_state)
       if (isGuest && values.guest_country) formData.append('guest_country', values.guest_country)
@@ -338,6 +351,21 @@ export function BookingForm({
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="guest_address"
+              render={({ field }) => (
+                <FormItem className="col-span-full">
+                  <FormLabel>Street Address *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123 Main St, Apt 4B" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 col-span-full">
               <FormField
                 control={form.control}

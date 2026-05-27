@@ -16,6 +16,7 @@ const bookAppointmentSchema = z.object({
   guest_name: z.string().optional(),
   guest_email: z.string().email("Invalid email").optional().or(z.literal("")),
   guest_phone: z.string().optional(),
+  guest_address: z.string().optional(),
   guest_city: z.string().optional(),
   guest_state: z.string().optional(),
   guest_country: z.string().optional(),
@@ -38,6 +39,7 @@ export async function createAppointment(formData: FormData) {
     guest_name: formData.get('guest_name') ?? undefined,
     guest_email: formData.get('guest_email') ?? undefined,
     guest_phone: formData.get('guest_phone') ?? undefined,
+    guest_address: formData.get('guest_address') ?? undefined,
     guest_city: formData.get('guest_city') ?? undefined,
     guest_state: formData.get('guest_state') ?? undefined,
     guest_country: formData.get('guest_country') ?? undefined,
@@ -52,20 +54,20 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
-  const { doctor_id, appointment_date, appointment_time, reason, patient_dob, patient_age, guest_name, guest_email, guest_phone, guest_city, guest_state, guest_country } = validatedFields.data
+  const { doctor_id, appointment_date, appointment_time, reason, patient_dob, patient_age, guest_name, guest_email, guest_phone, guest_address, guest_city, guest_state, guest_country } = validatedFields.data
 
   const is_walkin = formData.get('is_walkin') === 'true'
 
   // Basic check: if not logged in (and not a staff member booking a walk-in), guest info is required
-  if (!user && (!guest_name || !guest_phone || !guest_city || !guest_state || !guest_country)) {
+  if (!user && (!guest_name || !guest_phone || !guest_address || !guest_city || !guest_state || !guest_country)) {
     return {
-      error: "Guest name, phone number, and location details are required for booking.",
+      error: "Guest name, phone number, address, and location details are required for booking.",
     }
   }
   
-  if (is_walkin && (!guest_name || !guest_phone || !guest_city || !guest_state || !guest_country)) {
+  if (is_walkin && (!guest_name || !guest_phone || !guest_address || !guest_city || !guest_state || !guest_country)) {
     return {
-      error: "Guest name, phone number, and location details are required for walk-in booking.",
+      error: "Guest name, phone number, address, and location details are required for walk-in booking.",
     }
   }
 
@@ -121,6 +123,7 @@ export async function createAppointment(formData: FormData) {
       guest_name,
       guest_email,
       guest_phone,
+      guest_address: guest_address || null,
       guest_city,
       guest_state,
       guest_country,
