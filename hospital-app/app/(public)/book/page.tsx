@@ -12,23 +12,13 @@ export default async function BookAppointmentPage({
   const params = await searchParams
   const defaultDoctorId = params?.doctor
 
-  // Fetch doctors from the database
+  // Fetch doctors and profiles using a single joined query now that the FK exists
   const { data: rawDoctors, error } = await supabase
     .from('doctors')
-    .select('id, specialization')
+    .select('id, specialization, profiles(id, first_name, last_name)')
     .eq('is_active', true)
 
-  const { data: dbProfiles } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name')
-
-  const doctors = (!error && rawDoctors) ? rawDoctors.map(doc => {
-    const profile = (dbProfiles || []).find(p => p.id === doc.id)
-    return {
-      ...doc,
-      profiles: profile || null
-    }
-  }) : []
+  const doctors = (!error && rawDoctors) ? rawDoctors : []
 
   const { data: { user } } = await supabase.auth.getUser()
 
