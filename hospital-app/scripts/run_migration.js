@@ -46,6 +46,47 @@ async function runMigration() {
       console.log("- Note: patient_id nullable alteration skipped or already applied");
     }
 
+    // 2b. Update foreign key of patient_id to point to profiles(id) instead of users(id) to allow PostgREST joins
+    try {
+      const fkCheck = await client.query(`
+        SELECT 
+          ccu.table_name AS foreign_table_name
+        FROM 
+          information_schema.table_constraints AS tc 
+          JOIN information_schema.key_column_usage AS kcu
+            ON tc.constraint_name = kcu.constraint_name
+            AND tc.table_schema = kcu.table_schema
+          JOIN information_schema.constraint_column_usage AS ccu
+            ON ccu.constraint_name = tc.constraint_name
+            AND ccu.table_schema = tc.table_schema
+        WHERE tc.constraint_type = 'FOREIGN KEY' 
+          AND tc.table_name='appointments' 
+          AND kcu.column_name='patient_id';
+      `);
+      
+      const referencedTable = fkCheck.rows[0]?.foreign_table_name;
+      if (referencedTable === 'users') {
+        console.log("Updating appointments(patient_id) foreign key to reference profiles(id) instead of users(id)...");
+        await client.query(`
+          ALTER TABLE public.appointments 
+          DROP CONSTRAINT IF EXISTS appointments_patient_id_fkey;
+        `);
+        await client.query(`
+          ALTER TABLE public.appointments 
+          ADD CONSTRAINT appointments_patient_id_fkey 
+          FOREIGN KEY (patient_id) 
+          REFERENCES public.profiles(id) 
+          ON DELETE CASCADE;
+        `);
+        console.log("✓ Successfully updated foreign key constraint to point to profiles(id)");
+        altered = true;
+      } else {
+        console.log("- foreign key on appointments(patient_id) already points to profiles or is already configured");
+      }
+    } catch (e) {
+      console.log("- Note: failed to update foreign key constraint on appointments(patient_id):", e.message);
+    }
+
     // 3. Add guest_address if missing
     if (!existingColumns.includes('guest_address')) {
       await client.query(`ALTER TABLE public.appointments ADD COLUMN guest_address TEXT;`);
