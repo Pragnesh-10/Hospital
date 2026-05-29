@@ -570,7 +570,11 @@ export function BookingForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Time Slot</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      key={`${selectedDoctorId}_${selectedDate ? selectedDate.getTime() : 'nodate'}`}
+                      onValueChange={field.onChange} 
+                      value={field.value || ""}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a time" />

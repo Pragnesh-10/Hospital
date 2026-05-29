@@ -306,7 +306,10 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
                   <Calendar
                     mode="single"
                     selected={newDate}
-                    onSelect={setNewDate as any}
+                    onSelect={(date) => {
+                      setNewDate(date as any)
+                      setNewTime('')
+                    }}
                     disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
                   />
                 </PopoverContent>
@@ -315,7 +318,11 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
             
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium">New Time</label>
-              <Select value={newTime} onValueChange={(val) => setNewTime(val || '')}>
+              <Select 
+                key={`${rescheduleId}_${newDate ? newDate.getTime() : 'nodate'}`}
+                value={newTime} 
+                onValueChange={(val) => setNewTime(val || '')}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
