@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { format } from 'date-fns'
+import { BackButton } from '@/components/shared/BackButton'
 
 export default async function PatientRecordsPage() {
   const supabase = await createClient()
@@ -17,9 +18,10 @@ export default async function PatientRecordsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
+      <div>
+        <BackButton fallbackUrl="/patient" />
         <h1 className="text-3xl font-bold tracking-tight">Medical History</h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mt-1">
           View your past appointments, reasons for visits, and doctors' medical notes.
         </p>
       </div>

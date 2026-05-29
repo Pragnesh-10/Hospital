@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { format } from 'date-fns'
-import { CalendarIcon, CheckCircle, Printer } from 'lucide-react'
+import { CalendarIcon, CheckCircle, Printer, ArrowLeft, ArrowRight } from 'lucide-react'
 import { PrintSlip } from '@/components/staff/PrintSlip'
 import Link from 'next/link'
 
@@ -67,6 +67,23 @@ export function BookingForm({
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [bookedAppointment, setBookedAppointment] = useState<any>(null)
+  const [step, setStep] = useState(defaultDoctorId ? 2 : 1)
+
+  const handleNextStep = async () => {
+    if (step === 1) {
+      const isValid = await form.trigger("doctor_id")
+      if (isValid) setStep(2)
+    } else if (step === 2) {
+      const isValid = await form.trigger(["appointment_date", "appointment_time"])
+      if (isValid) setStep(3)
+    }
+  }
+
+  const handlePrevStep = () => {
+    if (step > 1) {
+      setStep(step - 1)
+    }
+  }
 
   const dynamicFormSchema = useMemo(() => {
     return z.object({
@@ -338,6 +355,7 @@ export function BookingForm({
           <Button variant="outline" onClick={() => {
             setBookedAppointment(null)
             form.reset()
+            setStep(defaultDoctorId ? 2 : 1)
           }} className="flex-1">
             Book Another
           </Button>
@@ -378,198 +396,162 @@ export function BookingForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         
-        <FormField
-          control={form.control}
-          name="doctor_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Doctor</FormLabel>
-              <Select onValueChange={(val) => {
-                field.onChange(val)
-                form.setValue("appointment_date", undefined as unknown as Date)
-                form.setValue("appointment_time", "")
-              }} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a doctor">
-                      {selectedDoctor ? `Dr. ${selectedDoctor.profiles?.first_name} ${selectedDoctor.profiles?.last_name} (${selectedDoctor.specialization})` : undefined}
-                    </SelectValue>
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {doctors.map((doc) => (
-                    <SelectItem key={doc.id} value={doc.id}>
-                      Dr. {doc.profiles?.first_name} {doc.profiles?.last_name} ({doc.specialization})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {selectedDoctorId && (() => {
-          const selectedDoctor = doctors.find(d => d.id === selectedDoctorId)
-          if (selectedDoctor?.consultation_fee != null) {
-            return (
-              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30 px-4 py-3">
-                <span className="text-sm text-muted-foreground">Consultation Fee:</span>
-                <span className="text-lg font-bold text-green-600">₹{Number(selectedDoctor.consultation_fee).toLocaleString('en-IN')}</span>
+        {/* Step Progress Stepper */}
+        <div className="mb-8 border-b pb-6">
+          <div className="flex items-center justify-center space-x-4 md:space-x-8">
+            {/* Step 1 */}
+            <div 
+              className={cn("flex flex-col items-center cursor-pointer", step > 1 && "hover:opacity-80")}
+              onClick={() => step > 1 && setStep(1)}
+            >
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center mb-1 text-xs font-bold transition-all duration-200",
+                step > 1 ? "bg-green-600 text-white animate-in zoom-in-50" : step === 1 ? "bg-primary text-white ring-4 ring-primary/10" : "bg-muted text-muted-foreground"
+              )}>
+                {step > 1 ? <CheckCircle className="h-4 w-4" /> : "1"}
               </div>
-            )
-          }
-          return null
-        })()}
+              <span className={cn("text-[10px] font-bold uppercase tracking-wider", step === 1 ? "text-primary font-extrabold" : "text-muted-foreground")}>Doctor</span>
+            </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="appointment_date"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "pl-3 text-left font-normal w-full",
-                          !field.value && "text-muted-foreground",
-                          !selectedDoctorId && "opacity-50 cursor-not-allowed"
-                        )}
-                        disabled={!selectedDoctorId}
-                      />
-                    }
-                  >
-                    {field.value ? (
-                      format(field.value, "PPP")
-                    ) : (
-                      <span>{selectedDoctorId ? "Pick a date" : "Select a doctor first"}</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={(date) => {
-                        field.onChange(date)
-                        form.setValue("appointment_time", "") // Clear time when date changes
-                      }}
-                      disabled={(date) => {
-                        const today = new Date()
-                        today.setHours(0, 0, 0, 0)
-                        return date < today
-                      }}
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <div className={cn("w-12 md:w-20 h-[2px] -mt-5 transition-all duration-300", step > 1 ? "bg-green-600" : "bg-muted")} />
 
-          <FormField
-            control={form.control}
-            name="appointment_time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Time</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a time" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {timeSlotsWithStatus.map(({ time, isDisabled, reason }) => (
-                      <SelectItem key={time} value={`${time}:00`} disabled={isDisabled}>
-                        {time} {isDisabled && (reason === 'booked' ? '(Booked)' : '(Doctor on Leave)')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            {/* Step 2 */}
+            <div 
+              className={cn("flex flex-col items-center cursor-pointer", (step > 2 || (step > 1 && selectedDoctorId)) && "hover:opacity-80")}
+              onClick={() => {
+                if (step > 2) setStep(2)
+                else if (step === 1 && selectedDoctorId) handleNextStep()
+              }}
+            >
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center mb-1 text-xs font-bold transition-all duration-200",
+                step > 2 ? "bg-green-600 text-white animate-in zoom-in-50" : step === 2 ? "bg-primary text-white ring-4 ring-primary/10" : "bg-muted text-muted-foreground"
+              )}>
+                {step > 2 ? <CheckCircle className="h-4 w-4" /> : "2"}
+              </div>
+              <span className={cn("text-[10px] font-bold uppercase tracking-wider", step === 2 ? "text-primary font-extrabold" : "text-muted-foreground")}>Schedule</span>
+            </div>
+
+            <div className={cn("w-12 md:w-20 h-[2px] -mt-5 transition-all duration-300", step > 2 ? "bg-green-600" : "bg-muted")} />
+
+            {/* Step 3 */}
+            <div className="flex flex-col items-center">
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center mb-1 text-xs font-bold transition-all duration-200",
+                step === 3 ? "bg-primary text-white ring-4 ring-primary/10" : "bg-muted text-muted-foreground"
+              )}>
+                3
+              </div>
+              <span className={cn("text-[10px] font-bold uppercase tracking-wider", step === 3 ? "text-primary font-extrabold" : "text-muted-foreground")}>Details</span>
+            </div>
+          </div>
         </div>
 
-        {isGuest && (
-          <div className="grid sm:grid-cols-2 gap-4 border p-4 rounded-lg bg-muted/20">
-            <div className="col-span-full">
-              <h3 className="font-medium text-sm">Guest Information</h3>
-              <p className="text-xs text-muted-foreground">Please provide your details since you are not logged in.</p>
-            </div>
-            
+        {/* Step 1: Select Doctor */}
+        {step === 1 && (
+          <div className="space-y-6 animate-in fade-in duration-300">
             <FormField
               control={form.control}
-              name="guest_name"
+              name="doctor_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
+                  <FormLabel>Doctor</FormLabel>
+                  <Select onValueChange={(val) => {
+                    field.onChange(val)
+                    form.setValue("appointment_date", undefined as unknown as Date)
+                    form.setValue("appointment_time", "")
+                  }} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a doctor">
+                          {selectedDoctor ? `Dr. ${selectedDoctor.profiles?.first_name} ${selectedDoctor.profiles?.last_name} (${selectedDoctor.specialization})` : undefined}
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {doctors.map((doc) => (
+                        <SelectItem key={doc.id} value={doc.id}>
+                          Dr. {doc.profiles?.first_name} {doc.profiles?.last_name} ({doc.specialization})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {selectedDoctorId && (() => {
+              const selectedDoctor = doctors.find(d => d.id === selectedDoctorId)
+              if (selectedDoctor?.consultation_fee != null) {
+                return (
+                  <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30 px-4 py-3">
+                    <span className="text-sm text-muted-foreground">Consultation Fee:</span>
+                    <span className="text-lg font-bold text-green-600">₹{Number(selectedDoctor.consultation_fee).toLocaleString('en-IN')}</span>
+                  </div>
+                )
+              }
+              return null
+            })()}
+          </div>
+        )}
+
+        {/* Step 2: Date & Time Selection (Schedule) */}
+        {step === 2 && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {selectedDoctor && (
+              <div className="text-sm font-medium bg-muted p-3 rounded-lg flex items-center justify-between">
+                <span>Selected Specialist: <strong>Dr. {selectedDoctor.profiles?.first_name} {selectedDoctor.profiles?.last_name}</strong></span>
+                <Button variant="ghost" size="sm" onClick={() => setStep(1)} className="text-xs text-primary underline p-0 h-auto hover:bg-transparent">
+                  Change
+                </Button>
+              </div>
+            )}
             
-            <FormField
-              control={form.control}
-              name="guest_phone"
-              render={({ field }) => (
-                <FormItem className="col-span-full sm:col-span-1">
-                  <FormLabel>Phone Number *</FormLabel>
-                  <FormControl>
-                    <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="guest_email"
-              render={({ field }) => (
-                <FormItem className="col-span-full sm:col-span-1">
-                  <FormLabel>Email (Optional)</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="john@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="guest_address"
-              render={({ field }) => (
-                <FormItem className="col-span-full">
-                  <FormLabel>Street Address *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="123 Main St, Apt 4B" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 col-span-full">
+            <div className="grid sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="guest_city"
+                name="appointment_date"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>City/Town/Village *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="City" {...field} />
-                    </FormControl>
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "pl-3 text-left font-normal w-full",
+                              !field.value && "text-muted-foreground",
+                              !selectedDoctorId && "opacity-50 cursor-not-allowed"
+                            )}
+                            disabled={!selectedDoctorId}
+                          />
+                        }
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>{selectedDoctorId ? "Pick a date" : "Select a doctor first"}</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            field.onChange(date)
+                            form.setValue("appointment_time", "") // Clear time when date changes
+                          }}
+                          disabled={(date) => {
+                            const today = new Date()
+                            today.setHours(0, 0, 0, 0)
+                            return date < today
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -577,41 +559,22 @@ export function BookingForm({
 
               <FormField
                 control={form.control}
-                name="guest_state"
+                name="appointment_time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>State *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="State" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="guest_country"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Country *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel>Time Slot</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select country" />
+                          <SelectValue placeholder="Select a time" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="United States">United States</SelectItem>
-                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                        <SelectItem value="Canada">Canada</SelectItem>
-                        <SelectItem value="Australia">Australia</SelectItem>
-                        <SelectItem value="India">India</SelectItem>
-                        <SelectItem value="Germany">Germany</SelectItem>
-                        <SelectItem value="France">France</SelectItem>
-                        <SelectItem value="Japan">Japan</SelectItem>
-                        <SelectItem value="Brazil">Brazil</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        {timeSlotsWithStatus.map(({ time, isDisabled, reason }) => (
+                          <SelectItem key={time} value={`${time}:00`} disabled={isDisabled}>
+                            {time} {isDisabled && (reason === 'booked' ? '(Booked)' : '(Doctor on Leave)')}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -622,57 +585,213 @@ export function BookingForm({
           </div>
         )}
 
-        <div className="grid sm:grid-cols-2 gap-4 border p-4 rounded-lg bg-muted/20">
-          <FormField
-            control={form.control}
-            name="patient_dob"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Birth (Optional)</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} value={field.value || ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+        {/* Step 3: Patient Information Details */}
+        {step === 3 && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {selectedDoctor && selectedDate && form.getValues("appointment_time") && (
+              <div className="text-xs space-y-1 bg-muted p-3 rounded-lg border text-muted-foreground">
+                <p>Doctor: <strong className="text-foreground">Dr. {selectedDoctor.profiles?.first_name} {selectedDoctor.profiles?.last_name} ({selectedDoctor.specialization})</strong></p>
+                <p>Date: <strong className="text-foreground">{format(selectedDate, "PPP")}</strong></p>
+                <p>Time Slot: <strong className="text-foreground">{form.getValues("appointment_time").slice(0, 5)}</strong></p>
+                {selectedDoctor?.consultation_fee != null && (
+                  <p>Fee: <strong className="text-foreground">₹{selectedDoctor.consultation_fee}</strong></p>
+                )}
+              </div>
             )}
-          />
-
-          <FormField
-            control={form.control}
-            name="patient_age"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Age *</FormLabel>
-                <FormControl>
-                  <Input type="number" min="0" max="120" placeholder="Enter age" {...field} value={field.value || ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="reason"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Reason for Visit (Optional)</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Tell us a little bit about your symptoms or reason for visit."
-                  className="resize-none"
-                  {...field}
+            
+            {isGuest && (
+              <div className="grid sm:grid-cols-2 gap-4 border p-4 rounded-lg bg-muted/20">
+                <div className="col-span-full">
+                  <h3 className="font-medium text-sm">Guest Information</h3>
+                  <p className="text-xs text-muted-foreground">Please provide your details since you are not logged in.</p>
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="guest_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                
+                <FormField
+                  control={form.control}
+                  name="guest_phone"
+                  render={({ field }) => (
+                    <FormItem className="col-span-full sm:col-span-1">
+                      <FormLabel>Phone Number *</FormLabel>
+                      <FormControl>
+                        <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? "Booking..." : "Confirm Booking"}
-        </Button>
+                <FormField
+                  control={form.control}
+                  name="guest_email"
+                  render={({ field }) => (
+                    <FormItem className="col-span-full sm:col-span-1">
+                      <FormLabel>Email (Optional)</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="john@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="guest_address"
+                  render={({ field }) => (
+                    <FormItem className="col-span-full">
+                      <FormLabel>Street Address *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="123 Main St, Apt 4B" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 col-span-full">
+                  <FormField
+                    control={form.control}
+                    name="guest_city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City/Town/Village *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="City" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="guest_state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="State" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="guest_country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="United States">United States</SelectItem>
+                            <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                            <SelectItem value="Canada">Canada</SelectItem>
+                            <SelectItem value="Australia">Australia</SelectItem>
+                            <SelectItem value="India">India</SelectItem>
+                            <SelectItem value="Germany">Germany</SelectItem>
+                            <SelectItem value="France">France</SelectItem>
+                            <SelectItem value="Japan">Japan</SelectItem>
+                            <SelectItem value="Brazil">Brazil</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid sm:grid-cols-2 gap-4 border p-4 rounded-lg bg-muted/20">
+              <FormField
+                control={form.control}
+                name="patient_dob"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of Birth (Optional)</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="patient_age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Age *</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" max="120" placeholder="Enter age" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="reason"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Reason for Visit (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Tell us a little bit about your symptoms or reason for visit."
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {/* Dynamic Stepper Navigation Buttons */}
+        <div className="flex gap-4 pt-4 border-t">
+          {step > 1 && (
+            <Button type="button" variant="outline" onClick={handlePrevStep} className="flex-1 flex items-center justify-center gap-2">
+              <ArrowLeft className="h-4 w-4" /> Previous Step
+            </Button>
+          )}
+          
+          {step < 3 ? (
+            <Button type="button" onClick={handleNextStep} className="flex-1 flex items-center justify-center gap-2">
+              Next Step <ArrowRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button type="submit" disabled={isSubmitting} className="flex-1">
+              {isSubmitting ? "Booking..." : "Confirm Booking"}
+            </Button>
+          )}
+        </div>
       </form>
     </Form>
   )

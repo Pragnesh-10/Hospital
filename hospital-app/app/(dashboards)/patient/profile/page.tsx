@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { PatientProfileForm } from './PatientProfileForm'
+import { BackButton } from '@/components/shared/BackButton'
 
 export default async function PatientProfilePage() {
   const supabase = await createClient()
@@ -19,8 +20,9 @@ export default async function PatientProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
+        <BackButton fallbackUrl="/patient" />
         <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
-        <p className="text-muted-foreground">Manage your personal information and contact details.</p>
+        <p className="text-muted-foreground mt-1">Manage your personal information and contact details.</p>
       </div>
 
       <PatientProfileForm initialProfile={profile} />

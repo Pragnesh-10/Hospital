@@ -1,15 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ProvisionForm } from './ProvisionForm'
 import { requireAdmin } from '@/lib/auth/verifyAdmin'
+import { BackButton } from '@/components/shared/BackButton'
 
 export default async function AdminUsersPage() {
   await requireAdmin()
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
+      <div>
+        <BackButton fallbackUrl="/admin" />
         <h1 className="text-3xl font-bold tracking-tight">Account Provisioning</h1>
-        <p className="text-muted-foreground">Securely generate accounts for Doctors and Hospital Staff.</p>
+        <p className="text-muted-foreground mt-1">Securely generate accounts for Doctors and Hospital Staff.</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { BookingForm } from '@/components/shared/BookingForm'
 import { createClient } from '@/lib/supabase/server'
 import { getSystemSettings } from '@/app/actions/admin'
+import { BackButton } from '@/components/shared/BackButton'
 
 export default async function BookAppointmentPage({
   searchParams,
@@ -44,7 +45,8 @@ export default async function BookAppointmentPage({
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="space-y-2">
+      <div>
+        <BackButton fallbackUrl="/" />
         <h1 className="text-3xl font-bold tracking-tight">Book an Appointment</h1>
         <p className="text-muted-foreground">
           Fill in the details below to schedule your consultation.

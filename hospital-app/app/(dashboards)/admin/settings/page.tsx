@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth/verifyAdmin'
 import { getSystemSettings } from '@/app/actions/admin'
 import { AdminSettingsForm } from './AdminSettingsForm'
+import { BackButton } from '@/components/shared/BackButton'
 
 export default async function AdminSettingsPage() {
   await requireAdmin()
@@ -20,9 +21,10 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
+      <div>
+        <BackButton fallbackUrl="/admin" />
         <h1 className="text-3xl font-bold tracking-tight">System Settings</h1>
-        <p className="text-muted-foreground">Manage global hospital application preferences.</p>
+        <p className="text-muted-foreground mt-1">Manage global hospital application preferences.</p>
       </div>
 
       <AdminSettingsForm initialSettings={settings} />

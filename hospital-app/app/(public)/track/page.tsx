@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Search, Calendar, Clock, User, Activity, CheckCircle, Clock3 } from 'lucide-react'
 import { lookupAppointment } from '@/app/actions/track'
+import { BackButton } from '@/components/shared/BackButton'
 
 export default function TrackAppointmentPage() {
   const [loading, setLoading] = useState(false)
@@ -56,6 +57,7 @@ export default function TrackAppointmentPage() {
 
   return (
     <div className="container max-w-2xl mx-auto py-12 px-4">
+      <BackButton fallbackUrl="/" />
       <div className="text-center mb-10 space-y-4">
         <h1 className="text-3xl font-bold tracking-tight">Track Your Appointment</h1>
         <p className="text-muted-foreground text-lg max-w-[600px] mx-auto">

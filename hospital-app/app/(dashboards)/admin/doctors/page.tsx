@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DoctorToggleAction } from './DoctorToggleAction'
 import { AddDoctorModal } from './AddDoctorModal'
 import { EditFeeModal } from './EditFeeModal'
+import { BackButton } from '@/components/shared/BackButton'
 
 export default async function ManageDoctorsPage() {
   const { adminClient } = await requireAdmin()
@@ -20,9 +21,12 @@ export default async function ManageDoctorsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Manage Doctors</h1>
-          <p className="text-muted-foreground">View and manage all doctors in the hospital network.</p>
+        <div>
+          <BackButton fallbackUrl="/admin" />
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">Manage Doctors</h1>
+            <p className="text-muted-foreground">View and manage all doctors in the hospital network.</p>
+          </div>
         </div>
         <AddDoctorModal />
       </div>

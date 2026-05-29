@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth/verifyAdmin'
 import { getAuditLogs } from '@/app/actions/audit'
 import { format } from 'date-fns'
+import { BackButton } from '@/components/shared/BackButton'
 
 export default async function AdminAuditPage() {
   await requireAdmin()
@@ -10,8 +11,9 @@ export default async function AdminAuditPage() {
   return (
     <div className="space-y-6">
       <div>
+        <BackButton fallbackUrl="/admin" />
         <h1 className="text-3xl font-bold tracking-tight">System Audit Log</h1>
-        <p className="text-muted-foreground">Trace admin actions and system configuration updates.</p>
+        <p className="text-muted-foreground mt-1">Trace admin actions and system configuration updates.</p>
       </div>
 
       <div className="rounded-md border bg-card text-card-foreground shadow-sm overflow-hidden">

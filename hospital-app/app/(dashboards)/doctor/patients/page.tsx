@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { DoctorPatientsList } from './DoctorPatientsList'
+import { BackButton } from '@/components/shared/BackButton'
 
 export default async function DoctorPatientsPage() {
   const supabase = await createClient()
@@ -18,8 +19,9 @@ export default async function DoctorPatientsPage() {
   return (
     <div className="space-y-6">
       <div>
+        <BackButton fallbackUrl="/doctor" />
         <h1 className="text-3xl font-bold tracking-tight">Patient Directory</h1>
-        <p className="text-muted-foreground">View patient consultation history, appointment logs, and medical notes.</p>
+        <p className="text-muted-foreground mt-1">View patient consultation history, appointment logs, and medical notes.</p>
       </div>
 
       <DoctorPatientsList appointments={appointments || []} />
