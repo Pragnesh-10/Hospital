@@ -151,6 +151,77 @@ async function runMigration() {
       console.log("- Note: system_settings table or seed operation skipped or encountered notice:", e.message);
     }
 
+    // 8. Create appointments RLS policies
+    try {
+      console.log("Updating appointments table RLS policies...");
+      await client.query(`
+        -- Create a secure function to check the user's role without triggering infinite loops
+        CREATE OR REPLACE FUNCTION public.get_user_role()
+        RETURNS public.user_role
+        LANGUAGE sql
+        SECURITY DEFINER
+        SET search_path = public
+        AS $$
+          SELECT role FROM public.users WHERE id = auth.uid();
+        $$;
+
+        -- Enable RLS on appointments table
+        ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
+
+        -- Drop existing policies on appointments to prevent duplicates
+        DROP POLICY IF EXISTS "Patients can view their own appointments" ON public.appointments;
+        DROP POLICY IF EXISTS "Doctors can view their own appointments" ON public.appointments;
+        DROP POLICY IF EXISTS "Patients can create appointments" ON public.appointments;
+        DROP POLICY IF EXISTS "Staff and Admins can view all appointments" ON public.appointments;
+        DROP POLICY IF EXISTS "Staff and Admins can insert appointments" ON public.appointments;
+        DROP POLICY IF EXISTS "Staff and Admins can update appointments" ON public.appointments;
+        DROP POLICY IF EXISTS "Doctors can update their own appointments" ON public.appointments;
+        DROP POLICY IF EXISTS "Patients can update their own appointments" ON public.appointments;
+
+        -- Recreate standard policies
+        CREATE POLICY "Patients can view their own appointments" ON public.appointments 
+          FOR SELECT USING (auth.uid() = patient_id);
+
+        CREATE POLICY "Doctors can view their own appointments" ON public.appointments 
+          FOR SELECT USING (auth.uid() = doctor_id);
+
+        CREATE POLICY "Patients can create appointments" ON public.appointments 
+          FOR INSERT WITH CHECK (auth.uid() = patient_id);
+
+        -- Add Staff and Admin policies
+        CREATE POLICY "Staff and Admins can view all appointments" ON public.appointments 
+          FOR SELECT USING (
+            public.get_user_role() IN ('staff', 'admin')
+          );
+
+        CREATE POLICY "Staff and Admins can insert appointments" ON public.appointments 
+          FOR INSERT WITH CHECK (
+            public.get_user_role() IN ('staff', 'admin')
+          );
+
+        CREATE POLICY "Staff and Admins can update appointments" ON public.appointments 
+          FOR UPDATE USING (
+            public.get_user_role() IN ('staff', 'admin')
+          );
+
+        -- Add Doctors update policy (for medical notes / complete status)
+        CREATE POLICY "Doctors can update their own appointments" ON public.appointments 
+          FOR UPDATE USING (
+            auth.uid() = doctor_id
+          );
+
+        -- Add Patients update policy (for cancellations)
+        CREATE POLICY "Patients can update their own appointments" ON public.appointments 
+          FOR UPDATE USING (
+            auth.uid() = patient_id
+          );
+      `);
+      console.log("✓ Successfully updated appointments RLS policies");
+      altered = true;
+    } catch (e) {
+      console.log("- Note: failed to update appointments RLS policies:", e.message);
+    }
+
     if (altered) {
       console.log("\n>>> Database migration completed successfully!");
     } else {
