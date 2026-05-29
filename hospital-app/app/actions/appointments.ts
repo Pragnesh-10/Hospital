@@ -85,6 +85,13 @@ export async function createAppointment(formData: FormData) {
   // Construct the full appointment datetime
   const appointmentDateTime = parseNaive(`${appointment_date}T${appointment_time}`)
 
+  // Prevent Booking Past Slots: unless it is a staff walk-in, the slot must be in the future
+  if (!is_walkin && appointmentDateTime < new Date()) {
+    return {
+      error: "Cannot book an appointment for a time slot that has already passed.",
+    }
+  }
+
   const supabaseAdmin = createAdminClient()
 
   // Check if the doctor is on leave for the requested date/time

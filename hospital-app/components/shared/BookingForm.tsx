@@ -178,12 +178,17 @@ export function BookingForm({
   const timeSlotsWithStatus = useMemo(() => {
     return allTimeSlots.map(time => {
       if (!selectedDoctorId || !selectedDate) {
-        return { time, isDisabled: false, reason: null as 'booked' | 'leave' | null }
+        return { time, isDisabled: false, reason: null as 'booked' | 'leave' | 'past' | null }
       }
       
       const [hours, minutes] = time.split(':')
-      const slotDate = new Date(selectedDate)
-      slotDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+      const dateStr = format(selectedDate, 'yyyy-MM-dd')
+      const slotDate = new Date(`${dateStr}T${hours}:${minutes}:00+05:30`)
+
+      // 1. Past Slots Check (skip for walk-ins)
+      if (!isWalkin && slotDate < new Date()) {
+        return { time, isDisabled: true, reason: 'past' as const }
+      }
 
       // Double Booking Check: check if already booked
       const isBooked = appointments.some(appt => {
@@ -220,9 +225,9 @@ export function BookingForm({
           return { time, isDisabled: true, reason: 'leave' as const }
         }
       }
-      return { time, isDisabled: false, reason: null as 'booked' | 'leave' | null }
+      return { time, isDisabled: false, reason: null as 'booked' | 'leave' | 'past' | null }
     })
-  }, [allTimeSlots, selectedDoctorId, selectedDate, leaves, appointments])
+  }, [allTimeSlots, selectedDoctorId, selectedDate, leaves, appointments, isWalkin])
 
   async function onSubmit(values: z.infer<typeof dynamicFormSchema>) {
     if (isGuest && (!values.guest_name || !values.guest_phone || !values.guest_address || !values.guest_city || !values.guest_state || !values.guest_country)) {
@@ -583,7 +588,11 @@ export function BookingForm({
                       <SelectContent>
                         {timeSlotsWithStatus.map(({ time, isDisabled, reason }) => (
                           <SelectItem key={time} value={`${time}:00`} disabled={isDisabled}>
-                            {time} {isDisabled && (reason === 'booked' ? '(Booked)' : '(Doctor on Leave)')}
+                            {time} {isDisabled && (
+                              reason === 'booked' ? ' (Booked)' :
+                              reason === 'leave' ? ' (Doctor on Leave)' :
+                              reason === 'past' ? ' (Passed)' : ''
+                            )}
                           </SelectItem>
                         ))}
                       </SelectContent>
