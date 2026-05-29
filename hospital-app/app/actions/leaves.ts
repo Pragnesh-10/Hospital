@@ -20,9 +20,19 @@ export async function addDoctorLeave(startDate: string, endDate: string, reason?
     return { error: `Only doctors can add leaves. (Role: ${userData?.role})` }
   }
 
+  // Helper to parse dates explicitly in IST (+05:30)
+  const parseIST = (dateStr: string) => {
+    const match = dateStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/)
+    const clean = match ? match[0] : dateStr
+    if (!clean.includes('+') && !clean.includes('Z') && !clean.endsWith('Z')) {
+      return new Date(`${clean}+05:30`)
+    }
+    return new Date(clean)
+  }
+
   // Validate dates
-  const start = new Date(startDate)
-  const end = new Date(endDate)
+  const start = parseIST(startDate)
+  const end = parseIST(endDate)
   
   if (start >= end) {
     return { error: 'Start time must be before end time.' }

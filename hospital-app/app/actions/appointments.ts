@@ -72,10 +72,13 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
-  // Helper to parse dates timezone-naively (wall-clock time) to prevent client/server timezone offsets
+  // Helper to parse dates explicitly in IST (+05:30) to prevent client/server timezone offsets
   function parseNaive(dateStr: string): Date {
     const match = dateStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/)
     const clean = match ? match[0] : dateStr
+    if (!clean.includes('+') && !clean.includes('Z') && !clean.endsWith('Z')) {
+      return new Date(`${clean}+05:30`)
+    }
     return new Date(clean)
   }
 

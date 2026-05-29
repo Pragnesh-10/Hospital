@@ -3,6 +3,7 @@ import { BookingForm } from '@/components/shared/BookingForm'
 import { createClient } from '@/lib/supabase/server'
 import { getSystemSettings } from '@/app/actions/admin'
 import { BackButton } from '@/components/shared/BackButton'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export default async function BookAppointmentPage({
   searchParams,
@@ -10,6 +11,7 @@ export default async function BookAppointmentPage({
   searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
   const supabase = await createClient()
+  const adminClient = createAdminClient()
 
   const params = await searchParams
   const defaultDoctorId = params?.doctor
@@ -30,13 +32,13 @@ export default async function BookAppointmentPage({
   const { data: { user } } = await supabase.auth.getUser()
 
   // 3. Fetch current/future leaves
-  const { data: dbLeaves } = await supabase
+  const { data: dbLeaves } = await adminClient
     .from('doctor_leaves')
     .select('*')
     .gte('end_date', new Date().toISOString().split('T')[0])
 
   // 4. Fetch all active non-cancelled appointments to filter double bookings
-  const { data: dbAppointments } = await supabase
+  const { data: dbAppointments } = await adminClient
     .from('appointments')
     .select('doctor_id, appointment_date, appointment_time')
     .neq('status', 'cancelled')

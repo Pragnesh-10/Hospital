@@ -186,12 +186,16 @@ export function BookingForm({
       slotDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
 
       // Double Booking Check: check if already booked
-      const timeStr = `${time}:00`
-      const isBooked = appointments.some(appt => 
-        appt.doctor_id === selectedDoctorId &&
-        appt.appointment_date === format(selectedDate, 'yyyy-MM-dd') &&
-        appt.appointment_time === timeStr
-      )
+      const isBooked = appointments.some(appt => {
+        if (appt.doctor_id !== selectedDoctorId) return false
+        
+        const apptDateClean = appt.appointment_date ? appt.appointment_date.split('T')[0] : ""
+        const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
+        if (apptDateClean !== selectedDateStr) return false
+        
+        const apptTimeClean = appt.appointment_time ? appt.appointment_time.slice(0, 5) : ""
+        return apptTimeClean === time
+      })
       if (isBooked) {
         return { time, isDisabled: true, reason: 'booked' as const }
       }
@@ -201,6 +205,9 @@ export function BookingForm({
       const parseNaive = (dateStr: string) => {
         const match = dateStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/)
         const clean = match ? match[0] : dateStr
+        if (!clean.includes('+') && !clean.includes('Z') && !clean.endsWith('Z')) {
+          return new Date(`${clean}+05:30`)
+        }
         return new Date(clean)
       }
 

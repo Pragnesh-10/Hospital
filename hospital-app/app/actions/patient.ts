@@ -29,13 +29,11 @@ export async function cancelAppointment(appointmentId: string) {
     return { error: "Appointment is already cancelled" }
   }
 
-  // 3. Verify date is in the future
-  const apptDate = new Date(appointment.appointment_date)
-  const today = new Date()
-  today.setHours(0,0,0,0)
-  apptDate.setHours(0,0,0,0)
+  // 3. Verify date is in the future (lexicographical date comparison in IST timezone)
+  const todayIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const apptDateStr = appointment.appointment_date
 
-  if (apptDate < today) {
+  if (apptDateStr < todayIST) {
     return { error: "Cannot cancel a past appointment" }
   }
 
