@@ -1,8 +1,8 @@
 'use server'
 
-import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logAdminAction } from '@/app/actions/audit'
 
 import { z } from 'zod'
 
@@ -86,6 +86,8 @@ export async function provisionAccount(formData: FormData) {
 
     if (profileError) throw new Error(`Profile Error: ${profileError.message}`)
     if (docError) throw new Error(`Doctor DB Error: ${docError.message}`)
+
+    await logAdminAction(user.id, 'provision_account', 'users', newUserId, { email, role })
 
     revalidatePath('/admin/users')
     revalidatePath('/admin/doctors')

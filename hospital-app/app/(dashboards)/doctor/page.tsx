@@ -1,4 +1,3 @@
-// TODO: Pending Reports count is a visual stub (hardcoded to 0).
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, Users, ClipboardList } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -20,6 +19,7 @@ export default async function DoctorDashboardPage() {
   const [
     { data: todayAppointmentsRes },
     { count: totalAppointmentsCount },
+    { count: allTimePendingCount },
     { data: doctorLeaves },
     { data: doctorData }
   ] = await Promise.all([
@@ -34,6 +34,12 @@ export default async function DoctorDashboardPage() {
       .from('appointments')
       .select('id', { count: 'exact', head: true })
       .eq('doctor_id', user.id),
+
+    supabase
+      .from('appointments')
+      .select('id', { count: 'exact', head: true })
+      .eq('doctor_id', user.id)
+      .in('status', ['pending', 'in_progress']),
       
     supabase
       .from('doctor_leaves')
@@ -49,7 +55,6 @@ export default async function DoctorDashboardPage() {
   ])
 
   const todayAppointments = todayAppointmentsRes || []
-  const pendingAppointmentsCount = todayAppointments.filter(a => a.status === 'pending' || a.status === 'in_progress').length
 
   return (
     <div className="space-y-6">
@@ -85,8 +90,8 @@ export default async function DoctorDashboardPage() {
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingAppointmentsCount}</div>
-            <p className="text-xs text-muted-foreground">Require check-in or notes</p>
+            <div className="text-2xl font-bold">{allTimePendingCount || 0}</div>
+            <p className="text-xs text-muted-foreground">All-time check-ins/actions needed</p>
           </CardContent>
         </Card>
       </div>

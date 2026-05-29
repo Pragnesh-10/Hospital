@@ -171,10 +171,10 @@ export async function uploadHospitalHeroImage(formData: FormData) {
       .from('hospital-images')
       .getPublicUrl(filePath)
 
-    // 5. Update system_settings table (saving JSONB string)
+    // 5. Update system_settings table
     const { error: dbError } = await adminClient
       .from('system_settings')
-      .upsert({ key: 'hospital_hero_image', value: JSON.stringify(publicUrl) })
+      .upsert({ key: 'hospital_hero_image', value: publicUrl })
 
     if (dbError) {
       console.error("Database Error:", dbError)
@@ -241,10 +241,10 @@ export async function uploadServiceImage(formData: FormData) {
       .from('hospital-images')
       .getPublicUrl(filePath)
 
-    // 5. Update system_settings table (saving JSONB string)
+    // 5. Update system_settings table
     const { error: dbError } = await adminClient
       .from('system_settings')
-      .upsert({ key: serviceKey, value: JSON.stringify(publicUrl) })
+      .upsert({ key: serviceKey, value: publicUrl })
 
     if (dbError) {
       console.error("Database Error:", dbError)

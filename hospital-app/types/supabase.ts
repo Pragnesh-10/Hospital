@@ -44,9 +44,9 @@ export interface Database {
         ]
       }
       facilities: {
-        Row: { id: string; title: string; description: string; image_url: string | null; created_at: string }
-        Insert: { id?: string; title: string; description: string; image_url?: string | null; created_at?: string }
-        Update: { id?: string; title?: string; description?: string; image_url?: string | null; created_at?: string }
+        Row: { id: string; title: string; description: string; icon_name: string | null; image_url: string | null; created_at: string }
+        Insert: { id?: string; title: string; description: string; icon_name?: string | null; image_url?: string | null; created_at?: string }
+        Update: { id?: string; title?: string; description?: string; icon_name?: string | null; image_url?: string | null; created_at?: string }
         Relationships: []
       }
       testimonials: {
@@ -95,6 +95,26 @@ export interface Database {
         Insert: { key: string; value: Json }
         Update: { key?: string; value?: Json }
         Relationships: []
+      }
+      contact_messages: {
+        Row: { id: string; first_name: string; last_name: string; email: string; message: string; is_read: boolean; created_at: string }
+        Insert: { id?: string; first_name: string; last_name: string; email: string; message: string; is_read?: boolean; created_at?: string }
+        Update: { id?: string; first_name?: string; last_name?: string; email?: string; message?: string; is_read?: boolean; created_at?: string }
+        Relationships: []
+      }
+      audit_log: {
+        Row: { id: string; admin_id: string | null; action: string; target_table: string | null; target_id: string | null; details: Json | null; created_at: string }
+        Insert: { id?: string; admin_id?: string | null; action: string; target_table?: string | null; target_id?: string | null; details?: Json | null; created_at?: string }
+        Update: { id?: string; admin_id?: string | null; action?: string; target_table?: string | null; target_id?: string | null; details?: Json | null; created_at?: string }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: { [_ in never]: never }

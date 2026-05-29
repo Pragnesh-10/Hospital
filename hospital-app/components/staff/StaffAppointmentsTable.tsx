@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Search, CheckCircle2, XCircle, Clock, Printer, User, Activity, MoreHorizontal, CalendarIcon } from 'lucide-react'
@@ -35,6 +36,7 @@ interface StaffAppointmentsTableProps {
 }
 
 export function StaffAppointmentsTable({ initialAppointments }: StaffAppointmentsTableProps) {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [loadingId, setLoadingId] = useState<string | null>(null)
   
@@ -67,6 +69,7 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
         toast.error(res.error)
       } else {
         toast.success(`Appointment marked as ${status.replace('_', ' ')}`)
+        router.refresh()
       }
     } catch (err) {
       toast.error('An error occurred')
@@ -91,6 +94,7 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
         toast.error(res.error)
       } else {
         toast.success('Appointment rescheduled successfully')
+        router.refresh()
       }
     } catch (err) {
       toast.error('An error occurred')

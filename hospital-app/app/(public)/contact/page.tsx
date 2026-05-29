@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
 import { toast } from 'sonner'
+import { submitContactForm } from '@/app/actions/contact'
 
 export default function ContactPage() {
   const [firstName, setFirstName] = useState('')
@@ -16,7 +17,7 @@ export default function ContactPage() {
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!firstName || !lastName || !email || !message) {
       toast.error('Please fill in all required fields.')
@@ -24,14 +25,23 @@ export default function ContactPage() {
     }
 
     setIsSubmitting(true)
-    setTimeout(() => {
-      toast.success('Thank you! Your message has been received.')
-      setFirstName('')
-      setLastName('')
-      setEmail('')
-      setMessage('')
+    const formData = new FormData(e.currentTarget)
+    try {
+      const res = await submitContactForm(formData)
+      if (res.error) {
+        toast.error(res.error)
+      } else {
+        toast.success('Thank you! Your message has been received.')
+        setFirstName('')
+        setLastName('')
+        setEmail('')
+        setMessage('')
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred. Please try again.')
+    } finally {
       setIsSubmitting(false)
-    }, 800)
+    }
   }
 
   return (
@@ -60,6 +70,7 @@ export default function ContactPage() {
                     <Label htmlFor="first-name">First name</Label>
                     <Input 
                       id="first-name" 
+                      name="firstName"
                       placeholder="John" 
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
@@ -70,6 +81,7 @@ export default function ContactPage() {
                     <Label htmlFor="last-name">Last name</Label>
                     <Input 
                       id="last-name" 
+                      name="lastName"
                       placeholder="Doe" 
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
@@ -81,6 +93,7 @@ export default function ContactPage() {
                   <Label htmlFor="email">Email</Label>
                   <Input 
                     id="email" 
+                    name="email"
                     type="email" 
                     placeholder="john@example.com" 
                     value={email}
@@ -92,6 +105,7 @@ export default function ContactPage() {
                   <Label htmlFor="message">Message</Label>
                   <Textarea 
                     id="message" 
+                    name="message"
                     placeholder="How can we help you?" 
                     className="min-h-[120px]" 
                     value={message}

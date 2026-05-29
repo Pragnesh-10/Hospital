@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logAdminAction } from '@/app/actions/audit'
 
 export async function toggleDoctorStatus(doctorId: string, currentStatus: boolean) {
   const supabase = await createClient()
@@ -24,6 +25,8 @@ export async function toggleDoctorStatus(doctorId: string, currentStatus: boolea
   if (error) {
     return { error: error.message }
   }
+
+  await logAdminAction(user.id, 'toggle_doctor_status', 'doctors', doctorId, { is_active: !currentStatus })
 
   revalidatePath('/admin/doctors')
   revalidatePath('/book')
@@ -64,6 +67,8 @@ export async function updateDoctorSettings(doctorId: string, formData: FormData)
   if (error) {
     return { error: error.message }
   }
+
+  await logAdminAction(user.id, 'update_doctor_settings', 'doctors', doctorId, { consultation_fee: fee, slot_interval_min: interval })
 
   revalidatePath('/admin/doctors')
   revalidatePath('/doctors')

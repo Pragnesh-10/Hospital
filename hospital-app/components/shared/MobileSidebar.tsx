@@ -2,7 +2,7 @@
 
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { Menu, Activity, LayoutDashboard, Calendar, Users, FileText, Settings, LogOut, Upload, ShieldPlus } from 'lucide-react'
+import { Menu, Activity, LayoutDashboard, Calendar, Users, FileText, Settings, LogOut, Upload, ShieldPlus, User, Mail, Building2, History } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
@@ -13,16 +13,21 @@ const getLinks = (role: string) => {
     { name: 'Overview', href: '/admin', icon: LayoutDashboard },
     { name: 'Manage Doctors', href: '/admin/doctors', icon: Users },
     { name: 'Provision Staff', href: '/admin/users', icon: ShieldPlus },
+    { name: 'Facilities', href: '/admin/facilities', icon: Building2 },
     { name: 'Uploads & Assets', href: '/admin/upload', icon: Upload },
+    { name: 'Messages', href: '/admin/messages', icon: Mail, isMessages: true },
+    { name: 'Audit Log', href: '/admin/audit', icon: History },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
   if (role === 'patient') return [
     { name: 'Dashboard', href: '/patient', icon: LayoutDashboard },
     { name: 'Book Appointment', href: '/book', icon: Calendar },
     { name: 'Medical Records', href: '/patient/records', icon: FileText },
+    { name: 'Profile Settings', href: '/patient/profile', icon: User },
   ]
   if (role === 'doctor') return [
     { name: 'Dashboard', href: '/doctor', icon: LayoutDashboard },
+    { name: 'My Patients', href: '/doctor/patients', icon: Users },
   ]
   if (role === 'staff') return [
     { name: 'Dashboard', href: '/staff', icon: LayoutDashboard },
@@ -30,7 +35,7 @@ const getLinks = (role: string) => {
   return []
 }
 
-export function MobileSidebar({ role }: { role: string }) {
+export function MobileSidebar({ role, unreadMessagesCount = 0 }: { role: string; unreadMessagesCount?: number }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const links = getLinks(role)
@@ -68,7 +73,12 @@ export function MobileSidebar({ role }: { role: string }) {
                   }`}
                 >
                   <Icon className="h-4 w-4" />
-                  {link.name}
+                  <span className="flex-1">{link.name}</span>
+                  {link.isMessages && unreadMessagesCount > 0 && (
+                    <span className="bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
+                      {unreadMessagesCount}
+                    </span>
+                  )}
                 </Link>
               )
             })}
@@ -86,3 +96,4 @@ export function MobileSidebar({ role }: { role: string }) {
     </Sheet>
   )
 }
+

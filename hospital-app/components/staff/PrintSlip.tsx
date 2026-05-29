@@ -9,15 +9,27 @@ interface PrintSlipProps {
   date: string
   time: string
   department: string
+  fee?: number | null
+  hospitalAddress?: string
 }
 
-export function PrintSlip({ patientName, token, doctorName, date, time, department }: PrintSlipProps) {
+export function PrintSlip({ 
+  patientName, 
+  token, 
+  doctorName, 
+  date, 
+  time, 
+  department,
+  fee,
+  hospitalAddress = "123 Health Avenue, Medical District, Cityville, State 10001"
+}: PrintSlipProps) {
   return (
     <div className="hidden print:block fixed inset-0 bg-white z-[9999] p-8 text-black font-sans">
       <div className="max-w-md mx-auto border-2 border-black p-6 rounded-lg">
         <div className="text-center mb-6 border-b-2 border-black pb-4">
           <h1 className="text-3xl font-bold uppercase tracking-widest">MediCare Plus</h1>
-          <p className="text-sm mt-1">Official Appointment Slip</p>
+          <p className="text-sm mt-1">{hospitalAddress}</p>
+          <p className="text-xs text-gray-500 mt-1">Official Appointment Slip</p>
         </div>
         
         <div className="space-y-4 text-lg">
@@ -42,6 +54,13 @@ export function PrintSlip({ patientName, token, doctorName, date, time, departme
             <span className="font-semibold text-gray-600">Department:</span>
             <span className="font-bold">{department}</span>
           </div>
+
+          {fee != null && (
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-gray-600">Consultation Fee:</span>
+              <span className="font-bold">₹{fee}</span>
+            </div>
+          )}
 
           <div className="flex justify-between items-center border-t border-dashed border-gray-400 pt-4 mt-4">
             <span className="font-semibold text-gray-600">Date:</span>

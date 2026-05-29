@@ -171,18 +171,14 @@ export async function lookupAppointment(formData: FormData) {
     : appt.guest_name || 'Guest'
 
   const doctorName = appt.doctors?.profiles
-    ? `Dr. ${appt.doctors.profiles.first_name} ${appt.doctors.profiles.last_name}`
+    ? `Dr. ${appt.doctors.profiles.first_name}`
     : 'Unknown Doctor'
-    
-  const departmentName = (appt.doctors as any)?.specialization || 'General'
 
   return {
     success: true,
     data: {
-      id: appt.id,
       patientName,
       doctorName,
-      departmentName,
       date: appt.appointment_date,
       time: appt.appointment_time,
       status: appt.status,

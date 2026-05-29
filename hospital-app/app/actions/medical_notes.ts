@@ -26,9 +26,16 @@ export async function saveMedicalNotes(formData: FormData) {
     return { error: "Not authorized to modify this appointment" }
   }
 
-  // Construct wall-clock date-time comparison
+  // Helper to parse dates with IST offset (+05:30) to prevent client/server timezone offsets
+  function parseNaive(dateStr: string): Date {
+    const match = dateStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/)
+    const clean = match ? match[0] : dateStr
+    return new Date(`${clean}+05:30`)
+  }
+
+  // Construct wall-clock date-time comparison in IST
   const now = new Date()
-  const apptTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`)
+  const apptTime = parseNaive(`${appointment.appointment_date}T${appointment.appointment_time}`)
   const isPast = now >= apptTime
 
   const updatePayload: any = { medical_notes: notes }

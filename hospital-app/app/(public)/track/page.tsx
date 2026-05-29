@@ -137,7 +137,6 @@ export default function TrackAppointmentPage() {
                 <div>
                   <p className="text-sm text-muted-foreground font-medium mb-1">Assigned Doctor</p>
                   <p className="font-semibold text-lg">{result.doctorName}</p>
-                  <p className="text-sm text-muted-foreground">{result.departmentName}</p>
                 </div>
               </div>
             </div>

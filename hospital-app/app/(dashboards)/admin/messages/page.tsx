@@ -1,0 +1,20 @@
+import { requireAdmin } from '@/lib/auth/verifyAdmin'
+import { getContactMessages } from '@/app/actions/contact'
+import { AdminMessagesList } from './AdminMessagesList'
+
+export default async function AdminMessagesPage() {
+  await requireAdmin()
+  const res = await getContactMessages()
+  const messages = res.success ? res.data : []
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Public Inquiries & Messages</h1>
+        <p className="text-muted-foreground">Review and manage contact submissions from patients and guests.</p>
+      </div>
+
+      <AdminMessagesList initialMessages={messages || []} />
+    </div>
+  )
+}

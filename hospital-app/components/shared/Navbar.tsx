@@ -4,6 +4,8 @@ import { Activity, Menu } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { signout } from '@/app/actions/auth'
 
+import { ThemeToggle } from '@/components/shared/ThemeToggle'
+
 export function Navbar({ user, role }: { user: any; role: string | null }) {
   const getDashboardUrl = (role: string | null) => {
     switch (role) {
@@ -60,6 +62,7 @@ export function Navbar({ user, role }: { user: any; role: string | null }) {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4">
+          <ThemeToggle />
           <div className="hidden sm:flex items-center gap-4">
             {user ? (
               <>

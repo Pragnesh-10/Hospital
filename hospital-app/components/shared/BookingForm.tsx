@@ -103,7 +103,6 @@ export function BookingForm({
   })
 
   // Get currently selected doctor and date
-  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedDoctorId = form.watch("doctor_id")
    
   const selectedDate = form.watch("appointment_date")
@@ -334,7 +333,7 @@ export function BookingForm({
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
           <Button onClick={() => window.print()} className="flex-1 flex items-center justify-center gap-2">
-            <Printer className="h-4 w-4" /> Print Slip / Receipt
+            <Printer className="h-4 w-4" /> Download PDF Receipt
           </Button>
           <Button variant="outline" onClick={() => {
             setBookedAppointment(null)
@@ -369,6 +368,7 @@ export function BookingForm({
           date={bookedAppointment.appointment_date}
           time={bookedAppointment.appointment_time}
           department={department}
+          fee={bookedAppointment.doctors?.consultation_fee}
         />
       </div>
     )

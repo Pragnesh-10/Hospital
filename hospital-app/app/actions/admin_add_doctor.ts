@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logAdminAction } from '@/app/actions/audit'
 
 export async function addDoctorAction(formData: FormData) {
   const supabase = await createClient()
@@ -72,6 +73,8 @@ export async function addDoctorAction(formData: FormData) {
   if (doctorError) {
     return { error: `Doctors table error: ${doctorError.message}` }
   }
+
+  await logAdminAction(user.id, 'add_doctor', 'doctors', newUserId, { email, specialization, experience })
 
   revalidatePath('/admin/doctors')
   revalidatePath('/doctors')

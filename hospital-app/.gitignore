@@ -47,3 +47,4 @@ next-env.d.ts
 .env.production.local   
 .env
 .agents
+/scripts/delete_test_accounts.ts
