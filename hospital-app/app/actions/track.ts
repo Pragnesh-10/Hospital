@@ -63,7 +63,7 @@ export async function lookupAppointment(formData: FormData) {
   const supabaseAdmin = createAdminClient()
 
   // Construct secure .or conditions free of syntax delimiters like parentheses, commas, colons, or ampersands
-  let orConditions: string[] = []
+  const orConditions: string[] = []
   if (safeTokenQuery) {
     orConditions.push(`appointment_number.eq.${safeTokenQuery}`)
   }
