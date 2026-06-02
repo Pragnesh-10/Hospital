@@ -16,8 +16,22 @@ import { cancelAppointment } from '@/app/actions/patient'
 import { toast } from 'sonner'
 import { XCircle, Calendar, Clock } from 'lucide-react'
 
+export interface PatientAppointment {
+  id: string;
+  status: string;
+  appointment_date: string;
+  appointment_time: string;
+  appointment_number?: string | null;
+  doctors?: {
+    profiles?: {
+      first_name: string;
+      last_name: string;
+    } | null;
+  } | null;
+}
+
 interface PatientAppointmentsListProps {
-  appointments: any[]
+  appointments: PatientAppointment[]
 }
 
 export function PatientAppointmentsList({ appointments }: PatientAppointmentsListProps) {
