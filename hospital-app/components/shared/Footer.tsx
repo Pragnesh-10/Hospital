@@ -54,7 +54,7 @@ export function Footer() {
         </div>
       </div>
       <div className="container mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} MediCare Plus Hospital. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} MediCare Plus Hospital. All rights reserved. Maintained and operated by Scalyx</p>
       </div>
     </footer>
   )
