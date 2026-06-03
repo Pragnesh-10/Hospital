@@ -37,7 +37,7 @@ export default function ContactPage() {
         setEmail('')
         setMessage('')
       }
-    } catch (err) {
+    } catch {
       toast.error('An unexpected error occurred. Please try again.')
     } finally {
       setIsSubmitting(false)

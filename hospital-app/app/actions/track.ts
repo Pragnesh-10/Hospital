@@ -76,7 +76,7 @@ export async function lookupAppointment(formData: FormData) {
 
   const orCondition = orConditions.join(',')
 
-  let { data: appointments, error } = await supabaseAdmin
+  const { data: initialAppointments, error } = await supabaseAdmin
     .from('appointments')
     .select(`
       id,
@@ -103,6 +103,8 @@ export async function lookupAppointment(formData: FormData) {
     .order('appointment_date', { ascending: false })
     .order('appointment_time', { ascending: false })
     .limit(1)
+
+  let appointments = initialAppointments
 
   // If no guest/token match, try matching by registered patient phone
   if (!appointments || appointments.length === 0) {

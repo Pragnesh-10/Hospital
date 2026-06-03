@@ -42,7 +42,7 @@ export function AdminMessagesList({ initialMessages }: AdminMessagesListProps) {
         toast.success("Message marked as read")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       toast.error("An error occurred")
     } finally {
       setUpdatingId(null)

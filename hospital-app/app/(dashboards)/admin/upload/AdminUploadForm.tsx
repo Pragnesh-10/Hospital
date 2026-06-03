@@ -12,7 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 type Entity = {
   id: string
   title?: string
-  profiles?: any
+  profiles?: {
+    first_name: string
+    last_name: string
+  } | null
 }
 
 export function AdminUploadForm({ type, entities }: { type: 'doctor' | 'facility', entities: Entity[] }) {

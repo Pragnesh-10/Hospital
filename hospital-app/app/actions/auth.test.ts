@@ -26,9 +26,33 @@ jest.mock('@/lib/supabase/admin', () => ({
 // Import the admin client mock after mocking it
 import { createAdminClient } from '@/lib/supabase/admin'
 
+interface MockAuth {
+  signInWithPassword: jest.Mock
+  signOut: jest.Mock
+}
+
+interface MockSupabaseClient {
+  auth: MockAuth
+}
+
+interface MockAdminAuth {
+  createUser: jest.Mock
+}
+
+interface MockAdminClient {
+  from: jest.Mock
+  select: jest.Mock
+  eq: jest.Mock
+  single: jest.Mock
+  upsert: jest.Mock
+  auth: {
+    admin: MockAdminAuth
+  }
+}
+
 describe('Auth Actions', () => {
-  let mockSupabaseClient: any
-  let mockAdminClient: any
+  let mockSupabaseClient: MockSupabaseClient
+  let mockAdminClient: MockAdminClient
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -60,8 +84,12 @@ describe('Auth Actions', () => {
   const executeAndCatchRedirect = async (action: () => Promise<void>) => {
     try {
       await action()
-    } catch (e: any) {
-      if (!e.message.startsWith('NEXT_REDIRECT:')) {
+    } catch (e) {
+      if (e instanceof Error) {
+        if (!e.message.startsWith('NEXT_REDIRECT:')) {
+          throw e
+        }
+      } else {
         throw e
       }
     }

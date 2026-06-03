@@ -1,14 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
 import { saveMedicalNotes } from '@/app/actions/medical_notes'
 import { getPatientHistory } from '@/app/actions/appointments'
 import { toast } from 'sonner'
 import { ScrollArea } from '@/components/ui/scroll-area'
+
+type PatientHistory = {
+  id: string
+  appointment_date: string
+  appointment_time: string
+  status: string
+  reason: string | null
+  medical_notes: string | null
+}
 
 type Appointment = {
   id: string
@@ -28,37 +36,33 @@ type Appointment = {
 
 export function DoctorSchedule({ appointments }: { appointments: Appointment[] }) {
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
-  const [history, setHistory] = useState<any[]>([])
+  const [history, setHistory] = useState<PatientHistory[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  useEffect(() => {
-    const appt = selectedAppt
-    if (!appt) {
-      setHistory([])
-      return
-    }
-
-    async function loadHistory(currentAppt: Appointment) {
-      setLoadingHistory(true)
-      try {
-        const res = await getPatientHistory(currentAppt.patient_id, currentAppt.guest_phone)
-        if (res.error) {
-          toast.error(res.error)
-        } else if (res.history) {
-          const filtered = res.history.filter((h: any) => h.id !== currentAppt.id)
-          setHistory(filtered)
-        }
-      } catch (err) {
-        console.error(err)
-        toast.error("Failed to load patient history")
-      } finally {
-        setLoadingHistory(false)
+  async function loadHistory(currentAppt: Appointment) {
+    setLoadingHistory(true)
+    try {
+      const res = await getPatientHistory(currentAppt.patient_id, currentAppt.guest_phone)
+      if (res.error) {
+        toast.error(res.error)
+      } else if (res.history) {
+        const filtered = (res.history as unknown as PatientHistory[]).filter((h: PatientHistory) => h.id !== currentAppt.id)
+        setHistory(filtered)
       }
+    } catch (err) {
+      console.error(err)
+      toast.error("Failed to load patient history")
+    } finally {
+      setLoadingHistory(false)
     }
+  }
 
+  const handleOpenNotes = (appt: Appointment) => {
+    setSelectedAppt(appt)
+    setHistory([])
     loadHistory(appt)
-  }, [selectedAppt])
+  }
 
   async function handleSaveNotes(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -104,7 +108,7 @@ export function DoctorSchedule({ appointments }: { appointments: Appointment[] }
               <Dialog open={selectedAppt?.id === appt.id} onOpenChange={(val) => {
                 if (!val) setSelectedAppt(null)
               }}>
-                <DialogTrigger render={<Button variant="outline" size="sm" onClick={() => setSelectedAppt(appt)} />}>
+                <DialogTrigger render={<Button variant="outline" size="sm" onClick={() => handleOpenNotes(appt)} />}>
                   View / Notes
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">

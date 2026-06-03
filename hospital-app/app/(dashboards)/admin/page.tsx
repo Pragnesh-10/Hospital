@@ -31,7 +31,7 @@ export default async function AdminDashboardPage() {
 
   // Calculate Expected Revenue Today
   const expectedRevenueToday = todayRevenueData?.reduce((sum, appt) => {
-    const fee = (appt.doctors as any)?.consultation_fee || 0
+    const fee = (appt.doctors as { consultation_fee: number | null } | null)?.consultation_fee || 0
     return sum + fee
   }, 0) || 0
 
@@ -59,7 +59,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Live overview of your hospital's performance and analytics.</p>
+        <p className="text-muted-foreground">Live overview of your hospital&apos;s performance and analytics.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">

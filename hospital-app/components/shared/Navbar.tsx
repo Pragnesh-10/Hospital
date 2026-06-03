@@ -5,24 +5,10 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/s
 import { signout } from '@/app/actions/auth'
 
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
+import { User } from '@supabase/supabase-js'
 
-export function Navbar({ user, role }: { user: any; role: string | null }) {
-  const getDashboardUrl = (role: string | null) => {
-    switch (role) {
-      case 'admin':
-        return '/admin'
-      case 'doctor':
-        return '/doctor'
-      case 'staff':
-        return '/staff'
-      default:
-        return '/patient'
-    }
-  }
-
-  const dashboardUrl = getDashboardUrl(role)
-
-  const NavLinks = () => (
+function NavLinks() {
+  return (
     <>
       <Link href="/" className="text-sm font-medium transition-colors hover:text-primary">
         Home
@@ -47,6 +33,23 @@ export function Navbar({ user, role }: { user: any; role: string | null }) {
       </Link>
     </>
   )
+}
+
+export function Navbar({ user, role }: { user: User | null; role: string | null }) {
+  const getDashboardUrl = (role: string | null) => {
+    switch (role) {
+      case 'admin':
+        return '/admin'
+      case 'doctor':
+        return '/doctor'
+      case 'staff':
+        return '/staff'
+      default:
+        return '/patient'
+    }
+  }
+
+  const dashboardUrl = getDashboardUrl(role)
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { z } from 'zod'
@@ -168,6 +167,7 @@ export async function createAppointment(formData: FormData) {
         last_name
       ),
       doctors (
+        consultation_fee,
         specialization,
         profiles (
           first_name,

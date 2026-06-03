@@ -21,19 +21,21 @@ type Leave = {
 
 export function LeaveManager({ initialLeaves }: { initialLeaves: Leave[] }) {
   const router = useRouter()
+  const [prevInitialLeaves, setPrevInitialLeaves] = useState(initialLeaves)
   const [leaves, setLeaves] = useState<Leave[]>(initialLeaves)
   const [loading, setLoading] = useState(false)
+  const [minDate, setMinDate] = useState('')
 
-  // Sync state when props change (e.g. after router.refresh())
-  useEffect(() => {
+  if (initialLeaves !== prevInitialLeaves) {
+    setPrevInitialLeaves(initialLeaves)
     setLeaves(initialLeaves)
-  }, [initialLeaves])
-
-  // Get timezone-offset corrected local ISO string for datetime-local min attribute
-  const getLocalISOString = () => {
-    const tzOffset = new Date().getTimezoneOffset() * 60000
-    return new Date(Date.now() - tzOffset).toISOString().slice(0, 16)
   }
+
+  useEffect(() => {
+    const tzOffset = new Date().getTimezoneOffset() * 60000
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMinDate(new Date(Date.now() - tzOffset).toISOString().slice(0, 16))
+  }, [])
 
   async function handleAddLeave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -88,11 +90,11 @@ export function LeaveManager({ initialLeaves }: { initialLeaves: Leave[] }) {
         <form onSubmit={handleAddLeave} className="grid sm:grid-cols-4 gap-4 sm:items-end bg-muted/50 p-4 rounded-lg border">
           <div className="space-y-1">
             <Label>Start Time</Label>
-            <Input type="datetime-local" name="start_date" required min={getLocalISOString()} />
+            <Input type="datetime-local" name="start_date" required min={minDate} />
           </div>
           <div className="space-y-1">
             <Label>End Time</Label>
-            <Input type="datetime-local" name="end_date" required min={getLocalISOString()} />
+            <Input type="datetime-local" name="end_date" required min={minDate} />
           </div>
           <div className="space-y-1">
             <Label>Reason (Optional)</Label>

@@ -3,13 +3,13 @@ import { getSystemSettings } from '@/app/actions/admin'
 export default async function AboutPage() {
   const res = await getSystemSettings()
   
-  const certifications = Array.isArray(res.settings?.certifications)
+  const certifications = (Array.isArray(res.settings?.certifications)
     ? res.settings.certifications
     : [
         { name: "ISO 9001:2015", description: "Quality Management System" },
         { name: "NABH Accredited", description: "National Accreditation Board for Hospitals" },
         { name: "JCI Accreditation", description: "Joint Commission International" }
-      ]
+      ]) as { name: string; description: string }[]
 
   return (
     <div className="container py-20 px-4 md:px-6">
@@ -39,7 +39,7 @@ export default async function AboutPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-bold">Licenses & Certifications</h2>
           <div className="grid sm:grid-cols-2 gap-4">
-            {certifications.map((cert: any, i: number) => (
+            {certifications.map((cert: { name: string; description: string }, i: number) => (
               <div key={i} className="p-4 border rounded-lg bg-muted/50">
                 <h3 className="font-semibold">{cert.name}</h3>
                 <p className="text-sm text-muted-foreground">{cert.description}</p>

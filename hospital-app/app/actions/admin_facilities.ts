@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 const facilitySchema = z.object({
   title: z.string().min(1, "Title is required").max(100),
@@ -10,7 +11,7 @@ const facilitySchema = z.object({
   iconName: z.string().min(1, "Icon name is required"),
 })
 
-async function checkAdmin(supabase: any) {
+async function checkAdmin(supabase: SupabaseClient) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 

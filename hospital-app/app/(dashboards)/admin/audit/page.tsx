@@ -3,10 +3,23 @@ import { getAuditLogs } from '@/app/actions/audit'
 import { format } from 'date-fns'
 import { BackButton } from '@/components/shared/BackButton'
 
+interface AuditLog {
+  id: string
+  action: string
+  target_table: string | null
+  target_id: string | null
+  details: unknown
+  created_at: string
+  profiles: {
+    first_name: string
+    last_name: string
+  } | null
+}
+
 export default async function AdminAuditPage() {
   await requireAdmin()
   const res = await getAuditLogs()
-  const logs = res.success ? res.data : []
+  const logs = (res.success ? res.data : []) as unknown as AuditLog[]
 
   return (
     <div className="space-y-6">
@@ -31,7 +44,7 @@ export default async function AdminAuditPage() {
             </thead>
             <tbody className="divide-y">
               {logs && logs.length > 0 ? (
-                logs.map((log: any) => {
+                logs.map((log: AuditLog) => {
                   const adminName = log.profiles 
                     ? `${log.profiles.first_name} ${log.profiles.last_name}`
                     : 'Unknown Admin'

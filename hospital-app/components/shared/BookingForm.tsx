@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -16,7 +15,6 @@ import { Calendar } from '@/components/ui/calendar'
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -41,12 +39,59 @@ import { createAppointment } from '@/app/actions/appointments'
 
 // Validation schema is defined dynamically inside the component to support conditional guest fields
 
+interface DoctorProfile {
+  id?: string
+  first_name: string
+  last_name: string
+}
+
 type Doctor = {
   id: string
   specialization: string
   consultation_fee: number
   slot_interval_min?: number
-  profiles: any
+  profiles: DoctorProfile | null
+}
+
+interface DoctorLeave {
+  id: string
+  doctor_id: string
+  start_date: string
+  end_date: string
+  reason: string | null
+  created_at: string
+}
+
+interface AppointmentSummary {
+  doctor_id: string
+  appointment_date: string
+  appointment_time: string
+  status?: string
+}
+
+interface BookedAppointment {
+  appointment_number?: string | null
+  patient_age?: string | number | null
+  patient_dob?: string | null
+  appointment_date: string
+  appointment_time: string
+  guest_name?: string | null
+  guest_address?: string | null
+  guest_city?: string | null
+  guest_state?: string | null
+  guest_country?: string | null
+  profiles?: {
+    first_name: string
+    last_name: string
+  } | null
+  doctors?: {
+    consultation_fee: number | null
+    specialization: string | null
+    profiles?: {
+      first_name: string
+      last_name: string
+    } | null
+  } | null
 }
 
 export function BookingForm({ 
@@ -60,13 +105,12 @@ export function BookingForm({
   doctors: Doctor[], 
   defaultDoctorId?: string, 
   isGuest?: boolean,
-  leaves?: any[],
-  appointments?: any[],
+  leaves?: DoctorLeave[],
+  appointments?: AppointmentSummary[],
   isWalkin?: boolean,
 }) {
-  const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [bookedAppointment, setBookedAppointment] = useState<any>(null)
+  const [bookedAppointment, setBookedAppointment] = useState<BookedAppointment | null>(null)
   const [step, setStep] = useState(defaultDoctorId ? 2 : 1)
 
   const handleNextStep = async () => {
@@ -393,12 +437,12 @@ export function BookingForm({
         {/* Hidden Printable Receipt component */}
         <PrintSlip
           patientName={patientName}
-          token={bookedAppointment.appointment_number}
+          token={bookedAppointment.appointment_number ?? null}
           doctorName={doctorName}
           date={bookedAppointment.appointment_date}
           time={bookedAppointment.appointment_time}
           department={department}
-          fee={bookedAppointment.doctors?.consultation_fee}
+          fee={bookedAppointment.doctors?.consultation_fee ?? null}
         />
       </div>
     )

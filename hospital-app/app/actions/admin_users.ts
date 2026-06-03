@@ -93,8 +93,9 @@ export async function provisionAccount(formData: FormData) {
     revalidatePath('/admin/doctors')
     return { success: true }
 
-  } catch (err: any) {
+  } catch (err) {
     console.error("Provisioning error:", err)
-    return { error: err.message || 'An unknown error occurred during provisioning.' }
+    const errMsg = err instanceof Error ? err.message : 'An unknown error occurred during provisioning.'
+    return { error: errMsg }
   }
 }

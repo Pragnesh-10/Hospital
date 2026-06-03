@@ -1,13 +1,14 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { Json } from '@/types/supabase'
 
 export async function logAdminAction(
   adminId: string,
   action: string,
   targetTable?: string,
   targetId?: string,
-  details?: any
+  details?: Json
 ) {
   const adminClient = createAdminClient()
   const { error } = await adminClient

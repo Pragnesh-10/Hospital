@@ -36,7 +36,7 @@ export async function uploadFacilityImage(formData: FormData) {
     const filePath = `${fileName}`
 
     // 3. Upload to Supabase Storage (bypassing RLS)
-    const { data: uploadData, error: uploadError } = await adminClient.storage
+    const { error: uploadError } = await adminClient.storage
       .from('hospital-images')
       .upload(filePath, file)
 
@@ -64,8 +64,9 @@ export async function uploadFacilityImage(formData: FormData) {
     revalidatePath('/facilities')
     return { success: true, url: publicUrl }
 
-  } catch (err: any) {
-    return { error: err.message || "An unexpected error occurred" }
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "An unexpected error occurred"
+    return { error: errMsg }
   }
 }
 
@@ -100,7 +101,7 @@ export async function uploadDoctorImage(formData: FormData) {
     const filePath = `${fileName}`
 
     // 2. Upload using Admin Client (Bypasses Storage RLS)
-    const { data: uploadData, error: uploadError } = await adminClient.storage
+    const { error: uploadError } = await adminClient.storage
       .from('hospital-images')
       .upload(filePath, file)
 
@@ -122,8 +123,9 @@ export async function uploadDoctorImage(formData: FormData) {
     revalidatePath('/doctors')
     return { success: true, url: publicUrl }
 
-  } catch (err: any) {
-    return { error: err.message || "An unexpected error occurred" }
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "An unexpected error occurred"
+    return { error: errMsg }
   }
 }
 
@@ -157,7 +159,7 @@ export async function uploadHospitalHeroImage(formData: FormData) {
     const filePath = `${fileName}`
 
     // 3. Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await adminClient.storage
+    const { error: uploadError } = await adminClient.storage
       .from('hospital-images')
       .upload(filePath, file)
 
@@ -185,8 +187,9 @@ export async function uploadHospitalHeroImage(formData: FormData) {
     revalidatePath('/')
     return { success: true, url: publicUrl }
 
-  } catch (err: any) {
-    return { error: err.message || "An unexpected error occurred" }
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "An unexpected error occurred"
+    return { error: errMsg }
   }
 }
 
@@ -227,7 +230,7 @@ export async function uploadServiceImage(formData: FormData) {
     const filePath = `${fileName}`
 
     // 3. Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await adminClient.storage
+    const { error: uploadError } = await adminClient.storage
       .from('hospital-images')
       .upload(filePath, file)
 
@@ -255,8 +258,9 @@ export async function uploadServiceImage(formData: FormData) {
     revalidatePath('/services')
     return { success: true, url: publicUrl }
 
-  } catch (err: any) {
-    return { error: err.message || "An unexpected error occurred" }
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "An unexpected error occurred"
+    return { error: errMsg }
   }
 }
 

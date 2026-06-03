@@ -41,7 +41,7 @@ export function PatientProfileForm({ initialProfile }: PatientProfileFormProps) 
         toast.success('Profile updated successfully.')
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       toast.error('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)

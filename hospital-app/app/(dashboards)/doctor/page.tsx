@@ -98,7 +98,7 @@ export default async function DoctorDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Today's Schedule</CardTitle>
+            <CardTitle>Today&apos;s Schedule</CardTitle>
           </CardHeader>
           <CardContent>
             <DoctorSchedule appointments={todayAppointments} />

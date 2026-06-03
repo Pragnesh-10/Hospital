@@ -50,7 +50,7 @@ export function PatientAppointmentsList({ appointments }: PatientAppointmentsLis
         toast.success("Appointment cancelled successfully")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       toast.error("An error occurred. Please try again.")
     } finally {
       setLoading(false)

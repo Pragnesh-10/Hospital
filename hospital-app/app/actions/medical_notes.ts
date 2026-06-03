@@ -38,7 +38,7 @@ export async function saveMedicalNotes(formData: FormData) {
   const apptTime = parseNaive(`${appointment.appointment_date}T${appointment.appointment_time}`)
   const isPast = now >= apptTime
 
-  const updatePayload: any = { medical_notes: notes }
+  const updatePayload: { medical_notes: string; status?: string } = { medical_notes: notes }
   if (isPast && (appointment.status === 'pending' || appointment.status === 'in_progress')) {
     updatePayload.status = 'completed'
   }

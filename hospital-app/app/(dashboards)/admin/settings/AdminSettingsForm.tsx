@@ -76,8 +76,9 @@ export function AdminSettingsForm({
         ;(e.target as HTMLFormElement).reset()
         router.refresh()
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to upload photo')
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : 'Failed to upload photo'
+      toast.error(errMsg)
     } finally {
       setIsUploadingPhoto(false)
     }
@@ -104,8 +105,9 @@ export function AdminSettingsForm({
         ;(e.target as HTMLFormElement).reset()
         router.refresh()
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to upload photo')
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : 'Failed to upload photo'
+      toast.error(errMsg)
     } finally {
       setUploadingService(null)
     }

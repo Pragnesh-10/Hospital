@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logAdminAction } from '@/app/actions/audit'
+import { Json } from '@/types/supabase'
 
 export async function toggleDoctorStatus(doctorId: string, currentStatus: boolean) {
   const supabase = await createClient()
@@ -88,7 +89,7 @@ export async function getSystemSettings() {
     return { error: error.message }
   }
 
-  const settings: Record<string, any> = {}
+  const settings: Record<string, Json> = {}
   data?.forEach(item => {
     settings[item.key] = item.value
   })
@@ -96,7 +97,7 @@ export async function getSystemSettings() {
   return { settings }
 }
 
-export async function updateSystemSetting(key: string, value: any) {
+export async function updateSystemSetting(key: string, value: Json) {
   const supabase = await createClient()
 
   // Verify admin status

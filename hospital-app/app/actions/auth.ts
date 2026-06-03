@@ -44,7 +44,7 @@ export async function login(formData: FormData) {
   // Fetch their actual role from the database using adminClient to bypass RLS issues
   const { createAdminClient } = await import('@/lib/supabase/admin')
   const adminClient = createAdminClient()
-  const { data: userData, error: userError } = await adminClient
+  const { data: userData } = await adminClient
     .from('users')
     .select('role')
     .eq('id', data.user.id)
@@ -81,7 +81,7 @@ export async function signup(formData: FormData) {
   const adminClient = createAdminClient()
   
   // 1. Create user with auto-confirmed email bypassing Supabase email requirements
-  const { data: adminData, error: adminError } = await adminClient.auth.admin.createUser({
+  const { error: adminError } = await adminClient.auth.admin.createUser({
     email,
     password,
     email_confirm: true,

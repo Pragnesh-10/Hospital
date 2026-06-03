@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import * as Icons from 'lucide-react'
 import { createStaticClient } from '@/lib/supabase/static'
+import { ComponentType } from 'react'
 
 // Fallback mock data in case the database isn't initialized yet
 export const dynamic = 'force-dynamic'
@@ -62,8 +63,8 @@ export default async function FacilitiesPage() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {facilities.map((facility) => {
           // Dynamically resolve the icon from lucide-react
-          // @ts-ignore
-          const Icon = Icons[facility.icon_name || 'Activity'] || Icons.Activity
+          const iconName = (facility.icon_name || 'Activity') as keyof typeof Icons
+          const Icon = (Icons[iconName] || Icons.Activity) as ComponentType<{ className?: string }>
           const hasImage = !!facility.image_url
 
           return (

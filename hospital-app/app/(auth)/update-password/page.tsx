@@ -16,7 +16,7 @@ export default function UpdatePasswordPage() {
   const [sessionConfirmed, setSessionConfirmed] = useState(false)
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
         setSessionConfirmed(true)
       }

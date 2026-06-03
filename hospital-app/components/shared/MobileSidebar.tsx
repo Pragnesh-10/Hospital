@@ -42,6 +42,7 @@ export function MobileSidebar({ role, unreadMessagesCount = 0 }: { role: string;
 
   // Close sheet on route change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(false)
   }, [pathname])
 

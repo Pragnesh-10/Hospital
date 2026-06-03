@@ -34,13 +34,13 @@ export default async function AdminUsersPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
-              <strong>Why use this portal?</strong> Normal users registering via the public homepage are automatically assigned the "Patient" role for security purposes.
+              <strong>Why use this portal?</strong> Normal users registering via the public homepage are automatically assigned the &quot;Patient&quot; role for security purposes.
             </p>
             <p>
               To ensure attackers cannot grant themselves elevated privileges, Doctors and Staff MUST be provisioned through this secure Admin terminal.
             </p>
             <p>
-              <strong>Next Steps:</strong> Once you provision an account, hand the Email and Temporary Password to the employee. They can log in immediately and use the "Forgot Password" flow to securely change it.
+              <strong>Next Steps:</strong> Once you provision an account, hand the Email and Temporary Password to the employee. They can log in immediately and use the &quot;Forgot Password&quot; flow to securely change it.
             </p>
           </CardContent>
         </Card>

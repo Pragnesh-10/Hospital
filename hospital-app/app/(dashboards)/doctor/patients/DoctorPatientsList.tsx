@@ -6,8 +6,26 @@ import { Search, User, Phone, Calendar, Clock, FileText, ChevronRight } from 'lu
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
+interface Appointment {
+  id: string
+  patient_id: string | null
+  guest_name: string | null
+  guest_phone: string | null
+  guest_email: string | null
+  appointment_date: string
+  appointment_time: string
+  status: string
+  medical_notes: string | null
+  profiles: {
+    first_name: string
+    last_name: string
+    phone: string | null
+    email?: string | null
+  } | null
+}
+
 interface DoctorPatientsListProps {
-  appointments: any[]
+  appointments: Appointment[]
 }
 
 export function DoctorPatientsList({ appointments }: DoctorPatientsListProps) {
@@ -20,7 +38,7 @@ export function DoctorPatientsList({ appointments }: DoctorPatientsListProps) {
     phone: string
     isRegistered: boolean
     email: string
-    appointments: any[]
+    appointments: Appointment[]
   }> = {}
 
   appointments.forEach(appt => {

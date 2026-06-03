@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, CheckCircle2, XCircle, Clock, Printer, User, Activity, MoreHorizontal, CalendarIcon } from 'lucide-react'
+import { Search, CheckCircle2, XCircle, Clock, Printer, Activity, MoreHorizontal, CalendarIcon } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -31,8 +30,58 @@ import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { PrintSlip } from './PrintSlip'
 
+interface Profile {
+  first_name: string
+  last_name: string
+  phone: string | null
+}
+
+interface DoctorProfile {
+  first_name: string
+  last_name: string
+}
+
+interface Doctor {
+  slot_interval_min: number | null
+  specialization: string | null
+  profiles: DoctorProfile | null
+}
+
+interface Appointment {
+  id: string
+  patient_id: string | null
+  doctor_id: string
+  appointment_date: string
+  appointment_time: string
+  status: string
+  reason: string | null
+  guest_name: string | null
+  guest_email: string | null
+  guest_phone: string | null
+  guest_city: string | null
+  guest_state: string | null
+  guest_country: string | null
+  appointment_number: string | null
+  medical_notes: string | null
+  created_at: string
+  patient_dob: string | null
+  patient_age: number | null
+  guest_address: string | null
+  doctors: Doctor | null
+  profiles: Profile | null
+}
+
+interface PrintData {
+  patientName: string
+  token: string | null
+  doctorName: string
+  date: string
+  time: string
+  department: string
+}
+
 interface StaffAppointmentsTableProps {
-  initialAppointments: any[]
+  initialAppointments: Appointment[]
 }
 
 export function StaffAppointmentsTable({ initialAppointments }: StaffAppointmentsTableProps) {
@@ -47,7 +96,7 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false)
 
   // Print State
-  const [printData, setPrintData] = useState<any>(null)
+  const [printData, setPrintData] = useState<PrintData | null>(null)
 
   const filteredAppointments = initialAppointments.filter(appt => {
     if (!searchTerm) return true
@@ -71,7 +120,7 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
         toast.success(`Appointment marked as ${status.replace('_', ' ')}`)
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       toast.error('An error occurred')
     } finally {
       setLoadingId(null)
@@ -96,7 +145,7 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
         toast.success('Appointment rescheduled successfully')
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       toast.error('An error occurred')
     } finally {
       setLoadingId(null)
@@ -106,10 +155,10 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
     }
   }
 
-  const handlePrint = (appt: any) => {
+  const handlePrint = (appt: Appointment) => {
     const patientName = appt.profiles ? `${appt.profiles.first_name} ${appt.profiles.last_name}` : appt.guest_name || 'Guest'
     const doctorName = appt.doctors?.profiles ? `Dr. ${appt.doctors.profiles.first_name} ${appt.doctors.profiles.last_name}` : 'Unknown Doctor'
-    const departmentName = (appt.doctors as any)?.specialization || 'General'
+    const departmentName = appt.doctors?.specialization || 'General'
 
     setPrintData({
       patientName,
@@ -307,7 +356,7 @@ export function StaffAppointmentsTable({ initialAppointments }: StaffAppointment
                     mode="single"
                     selected={newDate}
                     onSelect={(date) => {
-                      setNewDate(date as any)
+                      setNewDate(date)
                       setNewTime('')
                     }}
                     disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}

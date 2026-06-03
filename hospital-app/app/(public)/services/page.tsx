@@ -1,5 +1,3 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { HeartPulse, Stethoscope, Microscope, Pill, Phone, Calendar, ArrowRight, ShieldCheck, Check } from 'lucide-react'
 import Link from 'next/link'
 import { getSystemSettings } from '@/app/actions/admin'

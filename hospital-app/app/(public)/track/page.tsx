@@ -9,10 +9,19 @@ import { Search, Calendar, Clock, User, Activity, CheckCircle, Clock3 } from 'lu
 import { lookupAppointment } from '@/app/actions/track'
 import { BackButton } from '@/components/shared/BackButton'
 
+interface LookupResult {
+  patientName: string
+  token: string | null
+  status: string
+  date: string
+  time: string
+  doctorName: string
+}
+
 export default function TrackAppointmentPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<LookupResult | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -29,7 +38,7 @@ export default function TrackAppointmentPage() {
       } else if (res.success) {
         setResult(res.data)
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.")
     } finally {
       setLoading(false)

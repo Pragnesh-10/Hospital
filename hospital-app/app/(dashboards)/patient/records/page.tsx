@@ -22,7 +22,7 @@ export default async function PatientRecordsPage() {
         <BackButton fallbackUrl="/patient" />
         <h1 className="text-3xl font-bold tracking-tight">Medical History</h1>
         <p className="text-muted-foreground mt-1">
-          View your past appointments, reasons for visits, and doctors' medical notes.
+          View your past appointments, reasons for visits, and doctors&apos; medical notes.
         </p>
       </div>
 
@@ -49,7 +49,7 @@ export default async function PatientRecordsPage() {
                   <p className="text-sm text-muted-foreground">{appt.reason || 'None provided.'}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="font-semibold text-sm">Doctor's Medical Notes:</span>
+                  <span className="font-semibold text-sm">Doctor&apos;s Medical Notes:</span>
                   <div className="bg-muted p-4 rounded-md text-sm mt-2 whitespace-pre-wrap">
                     {appt.medical_notes || 'No notes have been added by the doctor yet.'}
                   </div>

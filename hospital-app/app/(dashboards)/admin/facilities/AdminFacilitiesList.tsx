@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, ComponentType } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -114,7 +114,7 @@ export function AdminFacilitiesList({ initialFacilities }: { initialFacilities: 
           router.refresh()
         }
       }
-    } catch (err) {
+    } catch {
       toast.error("An error occurred")
     } finally {
       setSubmitting(false)
@@ -133,7 +133,7 @@ export function AdminFacilitiesList({ initialFacilities }: { initialFacilities: 
         setDeleteId(null)
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       toast.error("An error occurred")
     } finally {
       setDeleting(false)
@@ -157,8 +157,8 @@ export function AdminFacilitiesList({ initialFacilities }: { initialFacilities: 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {initialFacilities.length > 0 ? (
           initialFacilities.map((facility) => {
-            // @ts-ignore
-            const Icon = Icons[facility.icon_name || 'Activity'] || Icons.Activity
+            const iconName = (facility.icon_name || 'Activity') as keyof typeof Icons
+            const Icon = (Icons[iconName] || Icons.Activity) as ComponentType<{ className?: string }>
             return (
               <Card key={facility.id} className="flex flex-col justify-between overflow-hidden group shadow-sm hover:shadow-md transition-all duration-300">
                 {facility.image_url ? (
@@ -243,8 +243,7 @@ export function AdminFacilitiesList({ initialFacilities }: { initialFacilities: 
                 </SelectTrigger>
                 <SelectContent>
                   {AVAILABLE_ICONS.map((icon) => {
-                    // @ts-ignore
-                    const DisplayIcon = Icons[icon] || Icons.Activity
+                    const DisplayIcon = (Icons[icon as keyof typeof Icons] || Icons.Activity) as ComponentType<{ className?: string }>
                     return (
                       <SelectItem key={icon} value={icon}>
                         <div className="flex items-center gap-2">

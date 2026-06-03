@@ -5,17 +5,30 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Link from 'next/link'
 import { createStaticClient } from '@/lib/supabase/static'
 
+interface DoctorWithProfile {
+  id: string
+  specialization: string
+  experience_years: number
+  is_active: boolean
+  availability: string | null
+  profiles: {
+    first_name: string
+    last_name: string
+    avatar_url: string | null
+  } | null
+}
+
 export const dynamic = 'force-dynamic'
 
 export default async function DoctorsPage() {
   const supabase = createStaticClient()
 
   // Fetch doctors and join with profiles automatically using the newly added Foreign Key
-  const { data, error: docError } = await supabase
+  const { data } = await supabase
     .from('doctors')
     .select('*, profiles(*)')
     
-  const doctors = data || []
+  const doctors = (data as unknown as DoctorWithProfile[]) || []
 
   return (
     <div className="container py-20 px-4 md:px-6">
@@ -33,7 +46,7 @@ export default async function DoctorsPage() {
           </div>
         )}
         
-        {doctors.map((doctor: any) => {
+        {doctors.map((doctor: DoctorWithProfile) => {
           const fullName = doctor.profiles ? `Dr. ${doctor.profiles.first_name} ${doctor.profiles.last_name}` : 'Unknown Doctor';
           const avatarUrl = doctor.profiles?.avatar_url || '';
 
