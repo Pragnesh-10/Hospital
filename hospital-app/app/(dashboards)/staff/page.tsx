@@ -1,4 +1,3 @@
-// TODO: Pending Reports count is a visual stub (hardcoded to 0).
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Activity, FileText, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -16,7 +15,8 @@ export default async function StaffDashboardPage() {
   const [
     { data: todayAppointments },
     { data: recentPatients },
-    { count: activeDoctorsCount }
+    { count: activeDoctorsCount },
+    { count: pendingReportsCount }
   ] = await Promise.all([
     supabase
       .from('appointments')
@@ -33,7 +33,13 @@ export default async function StaffDashboardPage() {
     supabase
       .from('doctors')
       .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
+      .eq('is_active', true),
+
+    supabase
+      .from('appointments')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'completed')
+      .is('medical_notes', null)
   ])
 
   const pendingAppointmentsCount = todayAppointments?.filter(a => a.status === 'pending').length || 0
@@ -46,7 +52,7 @@ export default async function StaffDashboardPage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Walk-ins & Appointments</CardTitle>
@@ -75,6 +81,16 @@ export default async function StaffDashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{pendingAppointmentsCount}</div>
             <p className="text-xs text-muted-foreground">Awaiting check-in</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Pending Reports</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingReportsCount || 0}</div>
+            <p className="text-xs text-muted-foreground">Awaiting medical notes</p>
           </CardContent>
         </Card>
       </div>
