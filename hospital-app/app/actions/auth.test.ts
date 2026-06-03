@@ -96,10 +96,29 @@ describe('Auth Actions', () => {
   }
 
   describe('login', () => {
-    it('redirects with error if validation fails', async () => {
+    it('redirects with error if email is missing', async () => {
       const formData = new FormData()
-      formData.append('email', 'invalid-email')
-      formData.append('password', '')
+      formData.append('password', 'password123')
+      formData.append('role', 'patient')
+
+      await executeAndCatchRedirect(() => login(formData))
+      expect(redirect).toHaveBeenCalledWith('/login?message=Invalid input data')
+    })
+
+    it('redirects with error if password is missing', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('role', 'patient')
+
+      await executeAndCatchRedirect(() => login(formData))
+      expect(redirect).toHaveBeenCalledWith('/login?message=Invalid input data')
+    })
+
+    it('redirects with error if role is missing or invalid', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'invalid_role')
 
       await executeAndCatchRedirect(() => login(formData))
       expect(redirect).toHaveBeenCalledWith('/login?message=Invalid input data')
@@ -120,7 +139,45 @@ describe('Auth Actions', () => {
       expect(redirect).toHaveBeenCalledWith('/login?message=Invalid%20credentials')
     })
 
-    it('redirects to correct role dashboard upon successful login', async () => {
+    it('redirects with error if signInWithPassword returns no user data but no error', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'patient')
+
+      mockSupabaseClient.auth.signInWithPassword.mockResolvedValue({
+        data: { user: null },
+        error: null,
+      })
+
+      await executeAndCatchRedirect(() => login(formData))
+      expect(redirect).toHaveBeenCalledWith('/login?message=Could not authenticate user')
+    })
+
+    it('falls back to patient role if user data fetch returns no role', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'patient') // Requested role must match fallback role to avoid wrong tab rejection
+
+      mockSupabaseClient.auth.signInWithPassword.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+        error: null,
+      })
+
+      mockAdminClient.single.mockResolvedValue({
+        data: null, // No user data found
+        error: null,
+      })
+
+      await executeAndCatchRedirect(() => login(formData))
+
+      expect(mockAdminClient.from).toHaveBeenCalledWith('users')
+      expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
+      expect(redirect).toHaveBeenCalledWith('/patient')
+    })
+
+    it('redirects to correct role dashboard upon successful login as doctor', async () => {
       const formData = new FormData()
       formData.append('email', 'doctor@example.com')
       formData.append('password', 'password123')
@@ -141,6 +198,52 @@ describe('Auth Actions', () => {
       expect(mockAdminClient.from).toHaveBeenCalledWith('users')
       expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
       expect(redirect).toHaveBeenCalledWith('/doctor')
+    })
+
+    it('redirects to correct role dashboard upon successful login as staff', async () => {
+      const formData = new FormData()
+      formData.append('email', 'staff@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'staff')
+
+      mockSupabaseClient.auth.signInWithPassword.mockResolvedValue({
+        data: { user: { id: 'staff-123' } },
+        error: null,
+      })
+
+      mockAdminClient.single.mockResolvedValue({
+        data: { role: 'staff' },
+        error: null,
+      })
+
+      await executeAndCatchRedirect(() => login(formData))
+
+      expect(mockAdminClient.from).toHaveBeenCalledWith('users')
+      expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
+      expect(redirect).toHaveBeenCalledWith('/staff')
+    })
+
+    it('redirects to correct role dashboard upon successful login as patient', async () => {
+      const formData = new FormData()
+      formData.append('email', 'patient@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'patient')
+
+      mockSupabaseClient.auth.signInWithPassword.mockResolvedValue({
+        data: { user: { id: 'patient-123' } },
+        error: null,
+      })
+
+      mockAdminClient.single.mockResolvedValue({
+        data: { role: 'patient' },
+        error: null,
+      })
+
+      await executeAndCatchRedirect(() => login(formData))
+
+      expect(mockAdminClient.from).toHaveBeenCalledWith('users')
+      expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
+      expect(redirect).toHaveBeenCalledWith('/patient')
     })
 
     it('redirects with error and signs out if role does not match', async () => {
