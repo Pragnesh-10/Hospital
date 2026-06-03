@@ -10,6 +10,6 @@ const config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
-}
+} as const
 
 export default createJestConfig(config)
