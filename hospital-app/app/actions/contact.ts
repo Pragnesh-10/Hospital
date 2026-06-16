@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
 const contactSchema = z.object({
@@ -45,7 +46,17 @@ export async function submitContactForm(formData: FormData) {
 }
 
 export async function getContactMessages() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
   const supabaseAdmin = createAdminClient()
+  const { data: userData } = await supabaseAdmin.from('users').select('role').eq('id', user.id).single()
+
+  if (userData?.role !== 'admin') {
+    return { error: 'Unauthorized' }
+  }
+
   const { data, error } = await supabaseAdmin
     .from('contact_messages')
     .select('*')
@@ -60,7 +71,17 @@ export async function getContactMessages() {
 }
 
 export async function markMessageAsRead(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
   const supabaseAdmin = createAdminClient()
+  const { data: userData } = await supabaseAdmin.from('users').select('role').eq('id', user.id).single()
+
+  if (userData?.role !== 'admin') {
+    return { error: 'Unauthorized' }
+  }
+
   const { error } = await supabaseAdmin
     .from('contact_messages')
     .update({ is_read: true })
