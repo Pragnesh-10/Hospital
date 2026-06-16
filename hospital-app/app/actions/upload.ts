@@ -2,6 +2,18 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { SupabaseClient } from '@supabase/supabase-js'
+
+let bucketEnsured = false;
+
+async function ensureBucket(adminClient: SupabaseClient) {
+  if (bucketEnsured) return;
+  const { data: buckets } = await adminClient.storage.listBuckets()
+  if (!buckets?.find(b => b.name === 'hospital-images')) {
+    await adminClient.storage.createBucket('hospital-images', { public: true })
+  }
+  bucketEnsured = true;
+}
 
 export async function uploadFacilityImage(formData: FormData) {
   const supabase = await createClient()
@@ -26,10 +38,7 @@ export async function uploadFacilityImage(formData: FormData) {
   try {
 
     // Ensure bucket exists
-    const { data: buckets } = await adminClient.storage.listBuckets()
-    if (!buckets?.find(b => b.name === 'hospital-images')) {
-      await adminClient.storage.createBucket('hospital-images', { public: true })
-    }
+    await ensureBucket(adminClient);
 
     const fileExt = file.name.split('.').pop()
     const fileName = `${facilityId}-${Math.random()}.${fileExt}`
@@ -91,10 +100,7 @@ export async function uploadDoctorImage(formData: FormData) {
   try {
 
     // 1. Ensure bucket exists
-    const { data: buckets } = await adminClient.storage.listBuckets()
-    if (!buckets?.find(b => b.name === 'hospital-images')) {
-      await adminClient.storage.createBucket('hospital-images', { public: true })
-    }
+    await ensureBucket(adminClient);
 
     const fileExt = file.name.split('.').pop()
     const fileName = `doctor-${doctorId}-${Math.random()}.${fileExt}`
@@ -149,10 +155,7 @@ export async function uploadHospitalHeroImage(formData: FormData) {
   
   try {
     // Ensure bucket exists
-    const { data: buckets } = await adminClient.storage.listBuckets()
-    if (!buckets?.find(b => b.name === 'hospital-images')) {
-      await adminClient.storage.createBucket('hospital-images', { public: true })
-    }
+    await ensureBucket(adminClient);
 
     const fileExt = file.name.split('.').pop()
     const fileName = `hero-hospital-${Math.random()}.${fileExt}`
@@ -220,10 +223,7 @@ export async function uploadServiceImage(formData: FormData) {
   
   try {
     // Ensure bucket exists
-    const { data: buckets } = await adminClient.storage.listBuckets()
-    if (!buckets?.find(b => b.name === 'hospital-images')) {
-      await adminClient.storage.createBucket('hospital-images', { public: true })
-    }
+    await ensureBucket(adminClient);
 
     const fileExt = file.name.split('.').pop()
     const fileName = `service-${serviceKey}-${Math.random()}.${fileExt}`

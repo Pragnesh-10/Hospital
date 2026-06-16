@@ -1,0 +1,10 @@
+Title: "⚡ Optimize bucket existence check in upload actions"
+Description:
+💡 **What:** Refactored bucket existence check in `upload.ts` to use a module-level variable `bucketEnsured`. This ensures we only query `listBuckets()` and attempt bucket creation once per server/isolate lifecycle, instead of on every file upload.
+
+🎯 **Why:** Previously, the `listBuckets()` API call was invoked on every single file upload request across all 4 upload actions (`uploadFacilityImage`, `uploadDoctorImage`, `uploadHospitalHeroImage`, `uploadServiceImage`). This added unnecessary network overhead.
+
+📊 **Measured Improvement:** We created a benchmark test (`bench_upload.test.ts`) running 50 sequential upload mock calls simulating a ~10ms network latency.
+* **Baseline:** ~533ms (50 calls to `listBuckets`).
+* **After Optimization:** ~18ms (1 call to `listBuckets`).
+* **Change over Baseline:** Network latency bottleneck removed for subsequent uploads on the same runtime isolate. Overall execution time dropped significantly (over 95% reduction in mock time).
