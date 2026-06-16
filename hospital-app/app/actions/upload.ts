@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
+let bucketVerified = false;
+
 export async function uploadFacilityImage(formData: FormData) {
   const supabase = await createClient()
 
@@ -26,9 +28,12 @@ export async function uploadFacilityImage(formData: FormData) {
   try {
 
     // Ensure bucket exists
-    const { data: buckets } = await adminClient.storage.listBuckets()
-    if (!buckets?.find(b => b.name === 'hospital-images')) {
-      await adminClient.storage.createBucket('hospital-images', { public: true })
+    if (!bucketVerified) {
+      const { data: buckets } = await adminClient.storage.listBuckets()
+      if (!buckets?.find(b => b.name === 'hospital-images')) {
+        await adminClient.storage.createBucket('hospital-images', { public: true })
+      }
+      bucketVerified = true
     }
 
     const fileExt = file.name.split('.').pop()
@@ -91,9 +96,12 @@ export async function uploadDoctorImage(formData: FormData) {
   try {
 
     // 1. Ensure bucket exists
-    const { data: buckets } = await adminClient.storage.listBuckets()
-    if (!buckets?.find(b => b.name === 'hospital-images')) {
-      await adminClient.storage.createBucket('hospital-images', { public: true })
+    if (!bucketVerified) {
+      const { data: buckets } = await adminClient.storage.listBuckets()
+      if (!buckets?.find(b => b.name === 'hospital-images')) {
+        await adminClient.storage.createBucket('hospital-images', { public: true })
+      }
+      bucketVerified = true
     }
 
     const fileExt = file.name.split('.').pop()
@@ -149,9 +157,12 @@ export async function uploadHospitalHeroImage(formData: FormData) {
   
   try {
     // Ensure bucket exists
-    const { data: buckets } = await adminClient.storage.listBuckets()
-    if (!buckets?.find(b => b.name === 'hospital-images')) {
-      await adminClient.storage.createBucket('hospital-images', { public: true })
+    if (!bucketVerified) {
+      const { data: buckets } = await adminClient.storage.listBuckets()
+      if (!buckets?.find(b => b.name === 'hospital-images')) {
+        await adminClient.storage.createBucket('hospital-images', { public: true })
+      }
+      bucketVerified = true
     }
 
     const fileExt = file.name.split('.').pop()
@@ -220,9 +231,12 @@ export async function uploadServiceImage(formData: FormData) {
   
   try {
     // Ensure bucket exists
-    const { data: buckets } = await adminClient.storage.listBuckets()
-    if (!buckets?.find(b => b.name === 'hospital-images')) {
-      await adminClient.storage.createBucket('hospital-images', { public: true })
+    if (!bucketVerified) {
+      const { data: buckets } = await adminClient.storage.listBuckets()
+      if (!buckets?.find(b => b.name === 'hospital-images')) {
+        await adminClient.storage.createBucket('hospital-images', { public: true })
+      }
+      bucketVerified = true
     }
 
     const fileExt = file.name.split('.').pop()
