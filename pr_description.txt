@@ -1,0 +1,10 @@
+🔒 Fix unauthenticated access to audit logs
+
+🎯 What:
+The `getAuditLogs` function in `hospital-app/app/actions/audit.ts` was missing authentication and authorization checks, allowing anyone to access sensitive audit logs.
+
+⚠️ Risk:
+An unauthenticated user could query the audit logs and view sensitive data, such as admin actions, target table details, and target IDs.
+
+🛡️ Solution:
+Added `supabase.auth.getUser()` to ensure the caller is authenticated. Additionally, added an admin role check using the `users` table to verify the user has the necessary privileges to view the audit logs.
