@@ -220,17 +220,35 @@ export function BookingForm({
   }, [interval])
   
   const timeSlotsWithStatus = useMemo(() => {
-    return allTimeSlots.map(time => {
-      if (!selectedDoctorId || !selectedDate) {
-        return { time, isDisabled: false, reason: null as 'booked' | 'leave' | 'past' | null }
+    if (!selectedDoctorId || !selectedDate) {
+      return allTimeSlots.map(time => ({ time, isDisabled: false, reason: null as 'booked' | 'leave' | 'past' | null }))
+    }
+
+    const parseNaive = (dateStr: string) => {
+      const match = dateStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/)
+      const clean = match ? match[0] : dateStr
+      if (!clean.includes('+') && !clean.includes('Z') && !clean.endsWith('Z')) {
+        return new Date(`${clean}+05:30`)
       }
-      
+      return new Date(clean)
+    }
+
+    const parsedDoctorLeaves = leaves
+      .filter(l => l.doctor_id === selectedDoctorId)
+      .map(leave => ({
+        start: parseNaive(leave.start_date),
+        end: parseNaive(leave.end_date)
+      }))
+
+    const dateStr = format(selectedDate, 'yyyy-MM-dd')
+    const now = new Date()
+
+    return allTimeSlots.map(time => {
       const [hours, minutes] = time.split(':')
-      const dateStr = format(selectedDate, 'yyyy-MM-dd')
       const slotDate = new Date(`${dateStr}T${hours}:${minutes}:00+05:30`)
 
       // 1. Past Slots Check (skip for walk-ins)
-      if (!isWalkin && slotDate < new Date()) {
+      if (!isWalkin && slotDate < now) {
         return { time, isDisabled: true, reason: 'past' as const }
       }
 
@@ -239,8 +257,7 @@ export function BookingForm({
         if (appt.doctor_id !== selectedDoctorId) return false
         
         const apptDateClean = appt.appointment_date ? appt.appointment_date.split('T')[0] : ""
-        const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
-        if (apptDateClean !== selectedDateStr) return false
+        if (apptDateClean !== dateStr) return false
         
         const apptTimeClean = appt.appointment_time ? appt.appointment_time.slice(0, 5) : ""
         return apptTimeClean === time
@@ -249,23 +266,9 @@ export function BookingForm({
         return { time, isDisabled: true, reason: 'booked' as const }
       }
 
-      const doctorLeaves = leaves.filter(l => l.doctor_id === selectedDoctorId)
-      
-      const parseNaive = (dateStr: string) => {
-        const match = dateStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/)
-        const clean = match ? match[0] : dateStr
-        if (!clean.includes('+') && !clean.includes('Z') && !clean.endsWith('Z')) {
-          return new Date(`${clean}+05:30`)
-        }
-        return new Date(clean)
-      }
-
-      for (const leave of doctorLeaves) {
-        const start = parseNaive(leave.start_date)
-        const end = parseNaive(leave.end_date)
-        
+      for (const leave of parsedDoctorLeaves) {
         // If the slot falls inside the leave range
-        if (slotDate >= start && slotDate < end) {
+        if (slotDate >= leave.start && slotDate < leave.end) {
           return { time, isDisabled: true, reason: 'leave' as const }
         }
       }
