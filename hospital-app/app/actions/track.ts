@@ -168,23 +168,43 @@ export async function lookupAppointment(formData: FormData) {
   }
 
   const appt = appointments[0]
-  const patientName = appt.profiles 
+  const rawPatientName = appt.profiles
     ? `${appt.profiles.first_name} ${appt.profiles.last_name}` 
     : appt.guest_name || 'Guest'
 
-  const doctorName = appt.doctors?.profiles
+  const rawDoctorName = appt.doctors?.profiles
     ? `Dr. ${appt.doctors.profiles.first_name}`
     : 'Unknown Doctor'
+
+  const rawToken = appt.appointment_number
+
+  // Mask sensitive information
+  const maskName = (name: string) => {
+    if (!name || name === 'Guest' || name === 'Unknown Doctor') return name;
+    return name.split(' ').map(part => {
+      if (part.toLowerCase() === 'dr.') return part;
+      if (part.length <= 1) return part;
+      if (part.length === 2) return part[0] + '*';
+      return part[0] + '*'.repeat(part.length - 2) + part[part.length - 1];
+    }).join(' ');
+  };
+
+  const maskToken = (token: string | null) => {
+    if (!token) return null;
+    return token.length > 4
+      ? token.substring(0, 4) + '*'.repeat(token.length - 4)
+      : '*'.repeat(token.length);
+  };
 
   return {
     success: true,
     data: {
-      patientName,
-      doctorName,
+      patientName: maskName(rawPatientName),
+      doctorName: maskName(rawDoctorName),
       date: appt.appointment_date,
       time: appt.appointment_time,
       status: appt.status,
-      token: appt.appointment_number,
+      token: maskToken(rawToken),
     }
   }
 }
